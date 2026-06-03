@@ -1,0 +1,43 @@
+{
+  "name": "giopilot",
+  "version": "0.1.0",
+  "description": "A simplistic, Pi-style coding agent harness on the GitHub Copilot SDK",
+  "type": "module",
+  "bin": {
+    "giopilot": "dist/cli.js"
+  },
+  "main": "dist/harness.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "copilot",
+    "agent",
+    "harness",
+    "pi",
+    "cli"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@github/copilot-sdk": "^1.0.0",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
