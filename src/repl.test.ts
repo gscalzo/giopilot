@@ -44,6 +44,13 @@ describe("handleInput", () => {
     expect(await handleInput("/quit", h, io)).toBe("exit");
   });
 
+  it("/model requests the model picker", async () => {
+    const h = makeHarness();
+    const { io } = makeIO();
+    expect(await handleInput("/model", h, io)).toBe("model");
+    expect(h.sendTurn).not.toHaveBeenCalled();
+  });
+
   it("/help lists how skills work", async () => {
     const h = makeHarness();
     const { io, lines } = makeIO();

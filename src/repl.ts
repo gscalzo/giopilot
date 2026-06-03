@@ -2,8 +2,8 @@ import { createInterface } from "node:readline";
 import { buildManifest } from "./skills/inject.js";
 import type { Harness } from "./harness.js";
 
-/** Whether the REPL should keep going or stop. */
-export type ReplResult = "continue" | "exit";
+/** Outcome of handling one line: keep going, stop, or open the model picker. */
+export type ReplResult = "continue" | "exit" | "model";
 
 /** Output sink for the REPL (stdout in production, captured in tests). */
 export interface ReplIO {
@@ -13,6 +13,7 @@ export interface ReplIO {
 const HELP = `Commands:
   /skills            list available skills (one line each)
   /skill:<name>      load a skill's full instructions and act on it
+  /model             switch the model
   /<command>         run an extension command
   /help              show this help
   /exit, /quit       leave giopilot
@@ -50,6 +51,7 @@ async function dispatchCommand(body: string, harness: Harness, io: ReplIO): Prom
   const args = rest.join(" ");
 
   if (head === "exit" || head === "quit") return "exit";
+  if (head === "model") return "model";
   if (head === "help") {
     io.print(HELP);
     return "continue";

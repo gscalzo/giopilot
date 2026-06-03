@@ -7,6 +7,12 @@ import { buildManifest, createLoadSkillTool } from "./skills/inject.js";
 import { createExtensionRegistry, type ExtensionCommand } from "./extensions/api.js";
 import { loadExtensions, type ExtensionLoadResult } from "./extensions/loader.js";
 
+/** A model as surfaced to the picker. */
+export interface ModelInfoLike {
+  id: string;
+  name?: string;
+}
+
 /** Minimal session surface the harness depends on (subset of the SDK's Session). */
 export interface SessionLike {
   on(eventType: string, handler: (event: unknown) => void): () => void;
@@ -15,7 +21,9 @@ export interface SessionLike {
 
 /** Minimal client surface the harness depends on (subset of CopilotClient). */
 export interface ClientLike {
+  start?(): Promise<void>;
   createSession(config: Record<string, unknown>): Promise<SessionLike>;
+  listModels?(): Promise<ModelInfoLike[]>;
   stop(): Promise<void> | void;
 }
 
@@ -34,12 +42,16 @@ export interface CreateHarnessOptions {
 }
 
 export interface Harness {
+  /** Current model id. Changes after setModel. */
+  readonly model: string;
   skills: SkillMeta[];
   commands: Map<string, ExtensionCommand>;
   extensionResults: ExtensionLoadResult[];
   systemPrompt: string;
   sendTurn(prompt: string): Promise<void>;
   loadSkillBody(name: string): string | null;
+  listModels(): Promise<ModelInfoLike[]>;
+  setModel(model: string): Promise<void>;
   stop(): Promise<void>;
 }
 
@@ -60,7 +72,8 @@ const defaultClientFactory: ClientFactory = () => new CopilotClient() as unknown
 /**
  * Build a giopilot harness: discover skills + extensions, assemble the minimal
  * system prompt, create a Copilot session wrapping its managed loop, and wire
- * streaming events to the supplied render hooks.
+ * streaming events to the supplied render hooks. The session can be rebuilt with
+ * a different model via setModel.
  */
 export async function createHarness(
   config: ResolvedConfig,
@@ -85,17 +98,26 @@ export async function createHarness(
     ...registry.tools,
   ];
 
-  const session = await client.createSession({
-    model: config.settings.model,
-    streaming: true,
-    systemMessage: { mode: "replace", content: systemPrompt },
-    tools,
-    onPermissionRequest: approveAll,
-  });
+  let model = config.settings.model;
 
-  wireEvents(session, render);
+  async function openSession(): Promise<SessionLike> {
+    const session = await client.createSession({
+      model,
+      streaming: true,
+      systemMessage: { mode: "replace", content: systemPrompt },
+      tools,
+      onPermissionRequest: approveAll,
+    });
+    wireEvents(session, render);
+    return session;
+  }
+
+  let session = await openSession();
 
   return {
+    get model() {
+      return model;
+    },
     skills,
     commands: registry.commands,
     extensionResults,
@@ -106,6 +128,11 @@ export async function createHarness(
     loadSkillBody: (name) => {
       const skill = skillsByName.get(name);
       return skill ? readSkillBody(skill) : null;
+    },
+    listModels: async () => (client.listModels ? client.listModels() : []),
+    setModel: async (next) => {
+      model = next;
+      session = await openSession();
     },
     stop: async () => {
       await client.stop();

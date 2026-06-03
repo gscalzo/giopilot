@@ -23,10 +23,15 @@ class FakeSession implements SessionLike {
 class FakeClient implements ClientLike {
   session = new FakeSession();
   lastConfig: Record<string, unknown> | undefined;
+  start = vi.fn(async () => undefined);
   createSession = vi.fn(async (config: Record<string, unknown>) => {
     this.lastConfig = config;
     return this.session;
   });
+  listModels = vi.fn(async () => [
+    { id: "auto", name: "Auto" },
+    { id: "gpt-5-mini", name: "GPT-5 mini" },
+  ]);
   stop = vi.fn(async () => undefined);
 }
 
@@ -122,5 +127,32 @@ describe("createHarness", () => {
     const { harness, client } = await build();
     await harness.stop();
     expect(client.stop).toHaveBeenCalledOnce();
+  });
+
+  it("exposes the current model", async () => {
+    const { harness } = await build();
+    expect(harness.model).toBe("auto");
+  });
+
+  it("listModels returns the client's models", async () => {
+    const { harness } = await build();
+    const models = await harness.listModels();
+    expect(models.map((m) => m.id)).toEqual(["auto", "gpt-5-mini"]);
+  });
+
+  it("setModel recreates the session with the new model", async () => {
+    const { harness, client } = await build();
+    await harness.setModel("gpt-5-mini");
+    expect(harness.model).toBe("gpt-5-mini");
+    expect(client.createSession).toHaveBeenCalledTimes(2);
+    expect(client.lastConfig?.model).toBe("gpt-5-mini");
+  });
+
+  it("re-wires streaming after a model switch", async () => {
+    const onDelta = vi.fn();
+    const { harness, client } = await build({ onDelta });
+    await harness.setModel("gpt-5-mini");
+    client.session.emit("assistant.message_delta", { data: { deltaContent: "x" } });
+    expect(onDelta).toHaveBeenCalledWith("x");
   });
 });

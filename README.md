@@ -27,21 +27,24 @@ npm link           # put `giopilot` on your PATH (or: npm i -g .)
 ## Usage
 
 ```bash
-giopilot                 # interactive REPL
-giopilot "list files"    # one-shot: run a single task, then exit
+giopilot                        # interactive TUI (Ink)
+giopilot "list files"           # one-shot: run a single task, then exit
+giopilot --model gpt-5-mini     # start the TUI with a specific model
 ```
 
-In the REPL:
+In the TUI:
 
 | Command          | What it does                                            |
 | ---------------- | ------------------------------------------------------- |
 | `/skills`        | List available skills (one line each)                   |
 | `/skill:<name>`  | Load a skill's full instructions and act on it          |
+| `/model`         | Open a picker to switch the model (from `listModels()`) |
 | `/<command>`     | Run an extension-registered command                     |
 | `/help`          | Show help                                               |
 | `/exit`, `/quit` | Leave giopilot                                          |
 
-Anything else you type is sent to the agent as a prompt.
+Anything else you type is sent to the agent as a prompt. The header shows the current
+model and status; assistant text streams in, with tool calls shown as dim notices.
 
 ## Configuration layout
 
@@ -118,9 +121,10 @@ Built test-first (TDD). Core logic lives in small, unit-tested modules
 
 ## Roadmap
 
-This is **Phase 1** (the simplistic Pi core). Planned additive phases:
+Phases 1–2 are done. Planned additive phases:
 
-- **Phase 2** — Ink TUI + runtime `/model` picker (`client.listModels()`).
+- **Phase 1** ✅ — simplistic Pi core: minimal prompt, lazy skills, extensions, wrap the SDK loop.
+- **Phase 2** ✅ — Ink TUI + runtime `/model` picker (`client.listModels()`) + `--model` flag.
 - **Phase 3** — memory store (`remember`/`recall`) + permission gating.
 - **Phase 4** — `giopilot update`, release CI, strict quality gates (coverage, complexity).
 
