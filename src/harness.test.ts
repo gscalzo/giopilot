@@ -86,7 +86,7 @@ describe("createHarness", () => {
 
   it("passes the configured model and enables streaming", async () => {
     const { client } = await build();
-    expect(client.lastConfig?.model).toBe("gpt-5");
+    expect(client.lastConfig?.model).toBe("auto");
     expect(client.lastConfig?.streaming).toBe(true);
   });
 

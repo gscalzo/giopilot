@@ -26,7 +26,7 @@ describe("loadConfig", () => {
 
   it("returns defaults when no config exists", () => {
     const cfg = loadConfig({ home: dirs.home, cwd: dirs.cwd });
-    expect(cfg.settings.model).toBe("gpt-5");
+    expect(cfg.settings.model).toBe("auto");
     expect(cfg.skillDirs).toEqual([]);
     expect(cfg.extensionDirs).toEqual([]);
   });
@@ -66,6 +66,6 @@ describe("loadConfig", () => {
     mkdirSync(p, { recursive: true });
     writeFileSync(join(p, "settings.json"), "{ not json");
     const cfg = loadConfig({ home: dirs.home, cwd: dirs.cwd });
-    expect(cfg.settings.model).toBe("gpt-5");
+    expect(cfg.settings.model).toBe("auto");
   });
 });

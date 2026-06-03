@@ -28,7 +28,7 @@ export interface LoadConfigOptions {
   cwd?: string;
 }
 
-const DEFAULT_SETTINGS: Settings = { model: "gpt-5" };
+const DEFAULT_SETTINGS: Settings = { model: "auto" };
 const CONFIG_DIRNAME = ".giopilot";
 
 function readSettings(dir: string): Partial<Settings> {

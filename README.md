@@ -51,7 +51,7 @@ global**.
 ```
 ~/.giopilot/            # global
 ./.giopilot/            # project (current working directory)
-├── settings.json       # { "model": "gpt-5" }
+├── settings.json       # { "model": "auto" }
 ├── skills/
 │   └── <name>/SKILL.md
 └── extensions/
