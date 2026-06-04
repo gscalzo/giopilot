@@ -1,0 +1,35 @@
+<svg width="640" height="200" viewBox="0 0 640 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="giopilot">
+  <defs>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a371f7"/>
+      <stop offset="0.5" stop-color="#58a6ff"/>
+      <stop offset="1" stop-color="#39d0d8"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#161b22"/>
+      <stop offset="1" stop-color="#0d1117"/>
+    </linearGradient>
+  </defs>
+
+  <!-- terminal card -->
+  <rect x="20" y="20" width="600" height="160" rx="18" fill="url(#glow)" stroke="#30363d" stroke-width="1.5"/>
+  <rect x="20.75" y="20.75" width="598.5" height="38" rx="17.25" fill="#0b0f14" fill-opacity="0.6"/>
+
+  <!-- traffic lights -->
+  <circle cx="48" cy="40" r="6" fill="#ff5f56"/>
+  <circle cx="70" cy="40" r="6" fill="#ffbd2e"/>
+  <circle cx="92" cy="40" r="6" fill="#27c93f"/>
+
+  <!-- prompt + wordmark -->
+  <text x="52" y="128" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="56" font-weight="700">
+    <tspan fill="#39d0d8">›</tspan><tspan dx="14" fill="url(#accent)">gio</tspan><tspan fill="#e6edf3">pilot</tspan>
+  </text>
+
+  <!-- blinking cursor block -->
+  <rect x="468" y="92" width="26" height="44" rx="3" fill="#58a6ff" fill-opacity="0.9"/>
+
+  <!-- tagline -->
+  <text x="54" y="160" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#7d8590">
+    a tiny, hackable coding-agent harness
+  </text>
+</svg>

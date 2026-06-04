@@ -1,176 +1,100 @@
-# giopilot
+<div align="center">
 
-A simplistic, [Pi](https://pi.dev/)-style coding agent harness powered by the
-[**GitHub Copilot SDK**](https://github.com/github/copilot-sdk).
+<img src="./assets/logo.svg" alt="giopilot" width="560" />
 
-giopilot keeps a tiny core and makes Copilot *feel* like Pi: a minimal system prompt,
-lazily-injected **skills**, and an in-process TypeScript **extension** mechanism. The
-Copilot SDK owns the agent loop (planning, tool calls, file edits, built-in
-Read/Write/Edit/Bash); giopilot wraps it and controls the prompt, the tools, the skills,
-and the extension surface around it.
+<h3>A tiny, hackable coding-agent harness on the GitHub Copilot SDK.</h3>
 
-## Prerequisites
+<p>
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="./docs/usage.md">Usage</a> ·
+  <a href="./docs/architecture.md">Architecture</a> ·
+  <a href="./docs/adr">Decisions</a> ·
+  <a href="./docs/development.md">Development</a>
+</p>
 
-- **Node.js ≥ 20**
-- A **GitHub Copilot subscription** and authentication. The Copilot SDK manages the bundled
-  Copilot CLI; on first run it may prompt you to authenticate (GitHub OAuth, or BYOK via
-  environment variables).
+<p>
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white">
+  <img alt="Node" src="https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-146%20passing-2ea043">
+  <img alt="Coverage" src="https://img.shields.io/badge/coverage-~100%25-2ea043">
+  <img alt="Complexity" src="https://img.shields.io/badge/cyclomatic-%E2%89%A45-blue">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-black">
+</p>
 
-## Install
+</div>
 
-```bash
-npm install        # install dependencies
-npm run build      # compile to dist/
-npm link           # put `giopilot` on your PATH (or: npm i -g .)
-```
-
-## Usage
-
-```bash
-giopilot                        # interactive TUI (Ink)
-giopilot "list files"           # one-shot: run a single task, then exit
-giopilot --model gpt-5-mini     # start the TUI with a specific model
-```
-
-In the TUI:
-
-| Command          | What it does                                            |
-| ---------------- | ------------------------------------------------------- |
-| `/skills`        | List available skills (one line each)                   |
-| `/skill:<name>`  | Load a skill's full instructions and act on it          |
-| `/model`         | Open a picker to switch the model (from `listModels()`) |
-| `/<command>`     | Run an extension-registered command                     |
-| `/help`          | Show help                                               |
-| `/exit`, `/quit` | Leave giopilot                                          |
-
-Anything else you type is sent to the agent as a prompt. Assistant text streams in, with
-tool calls shown as dim notices.
-
-The header is a **status line**: `model · status · ⎇ branch · ◆ credits`. It shows the
-current model, whether the agent is idle/thinking, the git branch of the working directory,
-and your GitHub Copilot **Credits** (premium requests when entitled, else chat) as
-`used / total used` — computed exactly as the VS Code Copilot extension does
-(`used = entitlement × (1 − percent_remaining/100)`), from the same `copilot_internal/user`
-endpoint. Credits are fetched best-effort using your `GITHUB_TOKEN`/`GH_TOKEN` env var or
-`gh auth token`; the segment is omitted if unavailable. To see a different account's credits
-(e.g. a Copilot Enterprise org), set `GITHUB_TOKEN` to that account's token.
-
-## Configuration layout
-
-giopilot reads configuration from a global and a project directory; **project overrides
-global**.
-
-```
-~/.giopilot/            # global
-./.giopilot/            # project (current working directory)
-├── settings.json       # { "model": "auto" }
-├── skills/
-│   └── <name>/SKILL.md
-└── extensions/
-    └── *.ts | *.mjs | *.js
-```
-
-### Skills (lazy, Pi-style)
-
-A skill is a folder with a `SKILL.md` file. Optional YAML frontmatter gives it a `name`
-(defaults to the folder name) and a one-line `description`:
-
-```markdown
----
-name: git-commit
-description: Stage changes and write a clean Conventional Commit
 ---
 
-# Git commit
-1. Run `git status` and `git diff` ...
+**giopilot** keeps a tiny core and makes GitHub Copilot *feel* like [Pi](https://pi.dev/): a
+minimal system prompt, lazily-injected **skills**, an in-process TypeScript **extension**
+mechanism, durable **memory**, and a clean terminal UI. The
+[GitHub Copilot SDK](https://github.com/github/copilot-sdk) owns the agent loop (planning,
+tool calls, file edits, built-in Read/Write/Edit/Bash); giopilot wraps it and controls the
+prompt, the tools, the skills, and the extension surface around it.
+
+```text
+›giopilot   model: auto · idle · ⎇ main · ◆ 7.4 / 200 used
 ```
 
-Every turn, only the one-line `- name: description` manifest is injected into the prompt.
-The full body is loaded **on demand** — either when the model calls the `load_skill` tool,
-or when you type `/skill:<name>`. This keeps the context small.
+## ✨ Features
 
-### Extensions
+| | |
+|---|---|
+| 🪶 **Tiny core** | A `<1000`-token system prompt; the SDK's built-in tools do the heavy lifting. |
+| 🧩 **Lazy skills** | One line per skill in context; full `SKILL.md` loaded on demand via `load_skill` / `/skill:name`. |
+| 🔌 **Extensions** | In-process TS modules: register tools, commands, prompt fragments, and permission gates. |
+| 🧠 **Memory** | `remember` / `recall` durable facts as markdown, injected as a one-line index. |
+| 🛡️ **Permissions** | Per-kind allow/deny policy plus extension gates, instead of blanket approval. |
+| 🖥️ **Ink TUI** | Streaming transcript, model picker, command autocomplete, and a live status line. |
+| 📊 **Status line** | Model · status · git branch · Copilot credits (the same figure VS Code shows). |
+| ✅ **Quality-gated** | TDD, ~100% coverage, ESLint, cyclomatic complexity ≤ 5 — enforced pre-commit and in CI. |
 
-An extension is a module with a default export that receives the `HarnessAPI`:
+## 🚀 Quick start
 
-```ts
-import { defineTool } from "@github/copilot-sdk";
-import type { HarnessAPI } from "giopilot";
-
-export default function (gio: HarnessAPI) {
-  // a slash command: /ping
-  gio.registerCommand("ping", (args, ctx) => ctx.print("pong"));
-
-  // an LLM-callable tool
-  gio.registerTool(
-    defineTool("now", {
-      description: "Return the current time.",
-      parameters: { type: "object", properties: {} },
-      handler: () => ({ now: new Date().toISOString() }),
-    }),
-  );
-
-  // append to the system prompt
-  gio.addSystemPrompt("When the user asks for the time, call the `now` tool.");
-}
-```
-
-A failing extension is reported, never fatal — one bad module won't take down the harness.
-
-### Memory
-
-giopilot can remember durable facts across sessions. The agent has two tools:
-
-- `remember` — save a fact (`name`, `content`, optional `description`/`type`).
-- `recall` — search saved memories and read them in full.
-
-Memories are stored as `memory/<slug>.md` (with frontmatter) plus a generated `MEMORY.md`
-index, under the project `.giopilot/memory/` if present, else `~/.giopilot/memory/`. The
-one-line index is injected into the prompt each turn; full content is loaded on `recall`.
-
-### Permissions
-
-By default giopilot approves all tool requests. You can restrict kinds in `settings.json`:
-
-```json
-{
-  "model": "auto",
-  "permissions": { "shell": "deny", "url": "deny" }
-}
-```
-
-Kinds: `shell`, `write`, `read`, `url`, `mcp`, `custom-tool`, `memory`, `hook`. Extensions
-can also add fine-grained gates via `gio.gatePermission(req => …)`; gates run first, then
-the settings policy.
-
-## Development
+> **Prerequisite:** a GitHub Copilot subscription and authentication. The SDK manages the
+> bundled Copilot CLI; the first run may prompt you to sign in.
 
 ```bash
-npm test               # run the Vitest suite
-npm run test:coverage  # with coverage (≥80% enforced)
-npm run lint           # ESLint (incl. cyclomatic complexity ≤ 5)
-npm run check          # lint + typecheck + coverage (the full gate)
-npm run dev -- "task"  # run from source via tsx
+npm install
+npm run build
+npm link            # puts `giopilot` on your PATH
+
+giopilot                      # interactive TUI
+giopilot "list the files"     # one-shot: run a task, then exit
+giopilot --model gpt-5-mini   # pick a model
+giopilot update               # check for a newer version
 ```
 
-Built test-first (TDD). Core logic lives in small, unit-tested modules
-(`config`, `systemPrompt`, `skills/*`, `extensions/*`, `memory/*`, `permissions`,
-`version`, `harness`, `repl`, `ui/controller`).
+In the TUI, type a prompt — or a slash command (Tab to autocomplete):
 
-**Quality gates** run both locally (Husky `pre-commit` → `npm run check`) and in CI
-(`.github/workflows/ci.yml`): ESLint clean, cyclomatic complexity `< 6`, and test coverage
-`≥ 80%`. Tagging `vX.Y.Z` triggers `release.yml` to publish to npm and cut a GitHub Release
-(needs an `NPM_TOKEN` secret).
+| Command | Does |
+|---|---|
+| `/skills` · `/skill:<name>` | List skills · load one and act on it |
+| `/model` | Pick the model (from `listModels()`) |
+| `/<command>` | Run an extension command |
+| `/help` · `/exit` | Help · quit |
 
-## Roadmap
+## 📚 Documentation
 
-- **Phase 1** ✅ — simplistic Pi core: minimal prompt, lazy skills, extensions, wrap the SDK loop.
-- **Phase 2** ✅ — Ink TUI + `/model` picker (`client.listModels()`) + `--model` flag + command autocomplete.
-- **Phase 3** ✅ — memory store (`remember`/`recall`, `memory/*.md` + `MEMORY.md` index) + permission gating.
-- **Phase 4** ✅ — `giopilot update`, release CI, strict quality gates (lint, coverage ≥80%, complexity).
+| Guide | What's inside |
+|---|---|
+| [**Usage**](./docs/usage.md) | TUI, commands, status line, one-shot, self-update |
+| [**Configuration**](./docs/configuration.md) | `.giopilot/` layout, `settings.json`, permission policy |
+| [**Skills**](./docs/skills.md) | Authoring `SKILL.md`, lazy loading |
+| [**Extensions**](./docs/extensions.md) | The `HarnessAPI`, writing & loading extensions |
+| [**Memory**](./docs/memory.md) | How `remember`/`recall` and the index work |
+| [**Architecture**](./docs/architecture.md) | Modules, data flow, the wrap-the-loop design |
+| [**Decisions (ADRs)**](./docs/adr) | Why the key choices were made |
+| [**Notes**](./docs/notes.md) | Caveats, gotchas, and known limitations |
+| [**Development**](./docs/development.md) | TDD workflow, quality gates, CI & releases |
 
-See `PLAN.md` for the full plan.
+## 🏗️ How it works (in one breath)
 
-## License
+`config` resolves settings → `harness` discovers skills/memory/extensions, assembles the
+minimal prompt, and opens a Copilot session with a curated tool set and a composed permission
+handler → the framework-free `SessionController` drives turns and holds UI state → a thin
+**Ink** view renders it. See [the architecture guide](./docs/architecture.md) for the diagram.
 
-MIT
+## 📄 License
+
+[MIT](./LICENSE)
