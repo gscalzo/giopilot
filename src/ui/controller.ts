@@ -56,6 +56,16 @@ export class SessionController {
     this.addLine("system", text);
   }
 
+  /** All command tokens (no leading slash) for autocomplete: builtins, skills, extensions. */
+  commandNames(): string[] {
+    const names = ["help", "skills", "model", "exit", "quit"];
+    if (this.harness) {
+      for (const skill of this.harness.skills) names.push(`skill:${skill.name}`);
+      names.push(...this.harness.commands.keys());
+    }
+    return names.sort();
+  }
+
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);

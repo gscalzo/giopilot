@@ -46,4 +46,28 @@ describe("App", () => {
     expect(lastFrame()).toContain("a system note");
     unmount();
   });
+
+  it("shows command suggestions while typing a slash command", async () => {
+    const controller = new SessionController();
+    controller.attach(fakeHarness());
+    const { lastFrame, stdin, unmount } = render(<App controller={controller} />);
+    await flush();
+    stdin.write("/s");
+    await flush();
+    expect(lastFrame()).toContain("/skills");
+    unmount();
+  });
+
+  it("Tab completes to the longest common prefix", async () => {
+    const controller = new SessionController();
+    controller.attach(fakeHarness());
+    const { lastFrame, stdin, unmount } = render(<App controller={controller} />);
+    await flush();
+    stdin.write("/mo");
+    await flush();
+    stdin.write("\t");
+    await flush();
+    expect(lastFrame()).toContain("/model");
+    unmount();
+  });
 });

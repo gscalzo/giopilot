@@ -124,6 +124,22 @@ describe("SessionController", () => {
     expect(c.state.lines.some((l) => l.text.includes("gpt-5-mini"))).toBe(true);
   });
 
+  it("commandNames lists builtins, skill:<name>, and extension commands, sorted", () => {
+    const commands = new Map<string, ExtensionCommand>([
+      ["ping", { name: "ping", handler: vi.fn() }],
+    ]);
+    const { c } = attached({ commands });
+    expect(c.commandNames()).toEqual([
+      "exit",
+      "help",
+      "model",
+      "ping",
+      "quit",
+      "skill:git-commit",
+      "skills",
+    ]);
+  });
+
   it("note adds a system line", () => {
     const { c } = attached();
     c.note("extension failed: x");

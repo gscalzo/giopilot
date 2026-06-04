@@ -1,8 +1,26 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Box, Text, render, useApp } from "ink";
+import { Box, Text, render, useApp, useInput } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import { SessionController, type LineRole, type TranscriptLine } from "./controller.js";
+import { completeCommand } from "../complete.js";
+
+const MAX_SUGGESTIONS = 8;
+
+function Suggestions({ matches }: { matches: string[] }): React.JSX.Element | null {
+  if (matches.length === 0) return null;
+  const shown = matches.slice(0, MAX_SUGGESTIONS);
+  const extra = matches.length - shown.length;
+  return (
+    <Box>
+      <Text dimColor>
+        {"tab ⇥ "}
+        {shown.join("  ")}
+        {extra > 0 ? `  (+${extra})` : ""}
+      </Text>
+    </Box>
+  );
+}
 
 const ROLE_COLOR: Record<LineRole, string> = {
   user: "cyan",
@@ -40,6 +58,11 @@ export function App({ controller }: { controller: SessionController }): React.JS
   );
 
   const { lines, model, status, pickerOpen, models } = controller.state;
+  const { matches, completed } = completeCommand(input, controller.commandNames());
+
+  useInput((_, key) => {
+    if (key.tab && !pickerOpen) setInput(completed);
+  });
 
   return (
     <Box flexDirection="column">
@@ -62,14 +85,17 @@ export function App({ controller }: { controller: SessionController }): React.JS
           onSelect={(item) => void controller.chooseModel(item.value)}
         />
       ) : (
-        <Box>
-          <Text color="green">› </Text>
-          <TextInput
-            value={input}
-            onChange={setInput}
-            onSubmit={onSubmit}
-            placeholder="type a prompt, or /help"
-          />
+        <Box flexDirection="column">
+          <Box>
+            <Text color="green">› </Text>
+            <TextInput
+              value={input}
+              onChange={setInput}
+              onSubmit={onSubmit}
+              placeholder="type a prompt, or /help"
+            />
+          </Box>
+          <Suggestions matches={matches} />
         </Box>
       )}
     </Box>
