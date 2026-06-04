@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { loadConfig } from "./config.js";
 import { createHarness, type Harness, type RenderHooks } from "./harness.js";
 import { parseModelFlag } from "./models.js";
+import { checkForUpdate } from "./version.js";
 import { SessionController } from "./ui/controller.js";
 import { runTui } from "./ui/App.js";
 
@@ -15,6 +16,7 @@ Usage:
   giopilot                     start the interactive TUI
   giopilot "<task>"            run a single task, then exit
   giopilot --model <id> ...    use a specific model
+  giopilot update              check npm/GitHub for a newer version
 
 Options:
   --model <id>, --model=<id>   model to use (default from settings, else "auto")
@@ -53,6 +55,21 @@ async function runOneShot(config: ReturnType<typeof loadConfig>, task: string): 
   await harness.stop();
 }
 
+async function runUpdate(): Promise<void> {
+  const current = readVersion();
+  const info = await checkForUpdate(current);
+  if (info.source === "none") {
+    stdout.write("Could not reach npm or GitHub to check for updates.\n");
+    return;
+  }
+  if (info.updateAvailable) {
+    stdout.write(`Update available: ${current} → ${info.latest} (${info.source})\n`);
+    stdout.write("Run: npm install -g giopilot\n");
+  } else {
+    stdout.write(`giopilot is up to date (${current}).\n`);
+  }
+}
+
 async function runInteractive(config: ReturnType<typeof loadConfig>): Promise<void> {
   const controller = new SessionController();
   const harness = await createHarness(config, { render: controller.renderHooks() });
@@ -71,6 +88,10 @@ async function main(): Promise<void> {
   }
   if (rest.includes("-v") || rest.includes("--version")) {
     stdout.write(readVersion() + "\n");
+    return;
+  }
+  if (rest[0] === "update") {
+    await runUpdate();
     return;
   }
 
