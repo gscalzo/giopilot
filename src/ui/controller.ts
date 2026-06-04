@@ -16,6 +16,8 @@ export interface ControllerState {
   model: string;
   pickerOpen: boolean;
   models: ModelChoice[];
+  branch: string | null;
+  credits: string | null;
 }
 
 const INITIAL_STATE: ControllerState = {
@@ -24,6 +26,8 @@ const INITIAL_STATE: ControllerState = {
   model: "",
   pickerOpen: false,
   models: [],
+  branch: null,
+  credits: null,
 };
 
 /**
@@ -54,6 +58,16 @@ export class SessionController {
   /** Add a system note to the transcript (e.g. startup warnings). */
   note(text: string): void {
     this.addLine("system", text);
+  }
+
+  /** Set the git branch shown in the status line. */
+  setBranch(branch: string | null): void {
+    this.update({ branch });
+  }
+
+  /** Set the Copilot credits string shown in the status line. */
+  setCredits(credits: string | null): void {
+    this.update({ credits });
   }
 
   /** All command tokens (no leading slash) for autocomplete: builtins, skills, extensions. */

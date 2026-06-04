@@ -4,6 +4,7 @@ import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import { SessionController, type LineRole, type TranscriptLine } from "./controller.js";
 import { completeCommand } from "../complete.js";
+import { formatStatusLine } from "../statusline.js";
 
 const MAX_SUGGESTIONS = 8;
 
@@ -57,7 +58,7 @@ export function App({ controller }: { controller: SessionController }): React.JS
     [controller],
   );
 
-  const { lines, model, status, pickerOpen, models } = controller.state;
+  const { lines, model, status, pickerOpen, models, branch, credits } = controller.state;
   const { matches, completed } = completeCommand(input, controller.commandNames());
 
   useInput((_, key) => {
@@ -70,9 +71,7 @@ export function App({ controller }: { controller: SessionController }): React.JS
         <Text color="green" bold>
           giopilot{" "}
         </Text>
-        <Text dimColor>
-          model: {model} · {status}
-        </Text>
+        <Text dimColor>{formatStatusLine({ model, status, branch, credits })}</Text>
       </Box>
       <Box flexDirection="column" marginY={1}>
         {lines.map((line, i) => (

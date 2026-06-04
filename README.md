@@ -43,8 +43,15 @@ In the TUI:
 | `/help`          | Show help                                               |
 | `/exit`, `/quit` | Leave giopilot                                          |
 
-Anything else you type is sent to the agent as a prompt. The header shows the current
-model and status; assistant text streams in, with tool calls shown as dim notices.
+Anything else you type is sent to the agent as a prompt. Assistant text streams in, with
+tool calls shown as dim notices.
+
+The header is a **status line**: `model · status · ⎇ branch · ◆ credits`. It shows the
+current model, whether the agent is idle/thinking, the git branch of the working directory,
+and your GitHub Copilot quota (premium requests when entitled, else chat) as
+`remaining/total (percent)` — the same figure VS Code shows on hover. Credits are fetched
+best-effort from GitHub's Copilot endpoint using your `gh`/env token; the segment is omitted
+if unavailable.
 
 ## Configuration layout
 

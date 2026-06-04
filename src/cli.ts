@@ -1,14 +1,34 @@
 #!/usr/bin/env node
-import { argv, stderr, stdout } from "node:process";
+import { argv, cwd, env, stderr, stdout } from "node:process";
 import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadConfig, type ResolvedConfig } from "./config.js";
 import { createHarness, type Harness, type RenderHooks } from "./harness.js";
 import { parseModelFlag } from "./models.js";
 import { checkForUpdate } from "./version.js";
+import { gitBranch } from "./git.js";
+import { fetchCredits, formatCredits } from "./credits.js";
 import { SessionController } from "./ui/controller.js";
 import { runTui } from "./ui/App.js";
+
+function githubToken(): string | null {
+  const fromEnv = env.GITHUB_TOKEN ?? env.GH_TOKEN;
+  if (fromEnv) return fromEnv;
+  try {
+    return execSync("gh auth token", { encoding: "utf8" }).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function populateStatusLine(controller: SessionController): void {
+  controller.setBranch(gitBranch(cwd()));
+  void fetchCredits(githubToken()).then((info) =>
+    controller.setCredits(info ? formatCredits(info) : null),
+  );
+}
 
 const USAGE = `giopilot — a simplistic, Pi-style coding agent on the GitHub Copilot SDK
 
@@ -75,6 +95,7 @@ async function runInteractive(config: ResolvedConfig): Promise<void> {
   const harness = await createHarness(config, { render: controller.renderHooks() });
   controller.attach(harness);
   reportFailedExtensions(harness, (t) => controller.note(t));
+  populateStatusLine(controller);
   await runTui(controller);
   await harness.stop();
 }

@@ -146,6 +146,14 @@ describe("SessionController", () => {
     expect(c.state.lines).toContainEqual({ role: "system", text: "extension failed: x" });
   });
 
+  it("setBranch and setCredits update the status state", () => {
+    const { c } = attached();
+    c.setBranch("main");
+    c.setCredits("194/200 (97%)");
+    expect(c.state.branch).toBe("main");
+    expect(c.state.credits).toBe("194/200 (97%)");
+  });
+
   it("cancelModelPicker closes the picker without switching", async () => {
     const { c, harness } = attached();
     await c.submit("/model");
