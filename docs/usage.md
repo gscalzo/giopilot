@@ -29,14 +29,19 @@ Type a prompt and press Enter. Slash commands start with `/`; press **Tab** to a
 | `/help` | Show help |
 | `/exit`, `/quit` | Leave giopilot |
 
-Assistant text streams in; tool calls appear as dim `[tool: …]` notices.
+Assistant text streams in; tool calls appear as dim `[tool: …]` notices. The input sits
+between two full-width rules; the prompt shows a `›` chevron when idle and an animated
+spinner while the model is working.
 
 ## The status line
 
-The header is a single status line:
+A single status line sits just below the input:
 
 ```text
-model: auto · idle · ⎇ main · ◆ 7.4 / 200 used
+─────────────────────────────────────────────
+› your prompt here
+─────────────────────────────────────────────
+giopilot  model: auto · idle · ⎇ main · ◆ 7.4 / 200 used
 ```
 
 - **model** — the active model.

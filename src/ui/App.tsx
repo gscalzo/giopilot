@@ -23,6 +23,19 @@ function Suggestions({ matches }: { matches: string[] }): React.JSX.Element | nu
   );
 }
 
+const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+/** A braille spinner frame that advances while `active`, or a steady chevron when idle. */
+function usePromptGlyph(active: boolean): string {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setFrame((f) => (f + 1) % SPINNER_FRAMES.length), 80);
+    return () => clearInterval(id);
+  }, [active]);
+  return active ? (SPINNER_FRAMES[frame % SPINNER_FRAMES.length] ?? "⠋") : "›";
+}
+
 const ROLE_COLOR: Record<LineRole, string> = {
   user: "cyan",
   assistant: "white",
@@ -60,6 +73,8 @@ export function App({ controller }: { controller: SessionController }): React.JS
 
   const { lines, model, status, pickerOpen, models, branch, credits } = controller.state;
   const { matches, completed } = completeCommand(input, controller.commandNames());
+  const thinking = status === "thinking";
+  const glyph = usePromptGlyph(thinking);
 
   useInput((_, key) => {
     if (key.tab && !pickerOpen) setInput(completed);
@@ -67,36 +82,47 @@ export function App({ controller }: { controller: SessionController }): React.JS
 
   return (
     <Box flexDirection="column">
+      <Box flexDirection="column" marginBottom={1}>
+        {lines.map((line, i) => (
+          <Line key={i} line={line} />
+        ))}
+      </Box>
+
+      <Box
+        flexDirection="column"
+        borderStyle="single"
+        borderColor="gray"
+        borderDimColor
+        borderLeft={false}
+        borderRight={false}
+      >
+        {pickerOpen ? (
+          <SelectInput
+            items={models}
+            onSelect={(item) => void controller.chooseModel(item.value)}
+          />
+        ) : (
+          <Box flexDirection="column">
+            <Box>
+              <Text color={thinking ? "yellow" : "green"}>{glyph} </Text>
+              <TextInput
+                value={input}
+                onChange={setInput}
+                onSubmit={onSubmit}
+                placeholder="type a prompt, or /help"
+              />
+            </Box>
+            <Suggestions matches={matches} />
+          </Box>
+        )}
+      </Box>
+
       <Box>
         <Text color="green" bold>
           giopilot{" "}
         </Text>
         <Text dimColor>{formatStatusLine({ model, status, branch, credits })}</Text>
       </Box>
-      <Box flexDirection="column" marginY={1}>
-        {lines.map((line, i) => (
-          <Line key={i} line={line} />
-        ))}
-      </Box>
-      {pickerOpen ? (
-        <SelectInput
-          items={models}
-          onSelect={(item) => void controller.chooseModel(item.value)}
-        />
-      ) : (
-        <Box flexDirection="column">
-          <Box>
-            <Text color="green">› </Text>
-            <TextInput
-              value={input}
-              onChange={setInput}
-              onSubmit={onSubmit}
-              placeholder="type a prompt, or /help"
-            />
-          </Box>
-          <Suggestions matches={matches} />
-        </Box>
-      )}
     </Box>
   );
 }
