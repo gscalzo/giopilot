@@ -95,6 +95,11 @@ describe("createHarness", () => {
     expect(client.lastConfig?.streaming).toBe(true);
   });
 
+  it("disables session telemetry", async () => {
+    const { client } = await build();
+    expect(client.lastConfig?.enableSessionTelemetry).toBe(false);
+  });
+
   it("exposes discovered skills and extension commands", async () => {
     const { harness } = await build();
     expect(harness.skills.map((s) => s.name)).toEqual(["git-commit"]);

@@ -128,6 +128,9 @@ export async function createHarness(
     const session = await client.createSession({
       model,
       streaming: true,
+      // Opt out of the SDK's internal session telemetry, which defaults to on
+      // for GitHub-authenticated sessions. See docs/notes.md.
+      enableSessionTelemetry: false,
       systemMessage: { mode: "replace", content: systemPrompt },
       tools,
       onPermissionRequest,
