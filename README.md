@@ -14,10 +14,10 @@
 
 <p>
   <a href="https://github.com/gscalzo/giopilot/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gscalzo/giopilot/actions/workflows/ci.yml/badge.svg?branch=main"></a>
-  <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white">
-  <img alt="Node >=20" src="https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white">
-  <img alt="Coverage gate >=80%" src="https://img.shields.io/badge/coverage-%E2%89%A580%25-2ea043">
-  <img alt="Cyclomatic complexity <=5" src="https://img.shields.io/badge/cyclomatic-%E2%89%A45-blue">
+  <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&amp;logoColor=white">
+  <img alt="Node" src="https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&amp;logoColor=white">
+  <img alt="Coverage gate" src="https://img.shields.io/badge/coverage-%E2%89%A580%25-2ea043">
+  <img alt="Cyclomatic complexity" src="https://img.shields.io/badge/cyclomatic-%E2%89%A45-blue">
   <a href="./LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-black"></a>
 </p>
 
