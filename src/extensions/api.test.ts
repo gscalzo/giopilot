@@ -29,4 +29,11 @@ describe("createExtensionRegistry", () => {
     reg.api.addSystemPrompt("second");
     expect(reg.fragments).toEqual(["first", "second"]);
   });
+
+  it("collects permission gates", () => {
+    const reg = createExtensionRegistry({ model: "gpt-5" });
+    const gate = () => undefined;
+    reg.api.gatePermission(gate);
+    expect(reg.gates).toEqual([gate]);
+  });
 });

@@ -15,7 +15,12 @@ Skills:
 - You have a list of available skills, each shown as one line: "- name: description".
 - A skill's full instructions are NOT loaded yet. When a task matches a skill, call the
   load_skill tool with that skill's name to load its instructions, then follow them.
-- Only load a skill when it is relevant to the current task.`;
+- Only load a skill when it is relevant to the current task.
+
+Memory:
+- Durable facts you saved are listed under "Memory" as one line each.
+- Use the recall tool to read a memory's full content, and the remember tool to save a new
+  durable fact (a user preference, project constraint, or feedback) worth keeping long-term.`;
 
 /** Rough token estimate (~4 chars/token). Good enough to guard a prompt budget. */
 export function estimateTokens(text: string): number {
@@ -25,6 +30,8 @@ export function estimateTokens(text: string): number {
 export interface AssembleOptions {
   /** One-line-per-skill manifest, or empty/undefined when there are no skills. */
   skillManifest?: string;
+  /** One-line-per-memory manifest, or empty/undefined when there are no memories. */
+  memoryManifest?: string;
   /** System-prompt fragments contributed by extensions. */
   extensionFragments?: string[];
 }
@@ -39,6 +46,11 @@ export function assembleSystemPrompt(options: AssembleOptions): string {
   const manifest = options.skillManifest?.trim();
   if (manifest) {
     parts.push(section("Available skills", manifest));
+  }
+
+  const memory = options.memoryManifest?.trim();
+  if (memory) {
+    parts.push(section("Memory", memory));
   }
 
   const fragments = (options.extensionFragments ?? []).filter((f) => f.trim().length > 0);

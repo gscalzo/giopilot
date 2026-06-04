@@ -21,4 +21,9 @@ export default function (gio: HarnessAPI): void {
   );
 
   gio.addSystemPrompt("When the user asks for the time, call the `now` tool.");
+
+  // Permission gate: abstain (return undefined) to defer to settings policy.
+  // To block a kind, return a decision, e.g.:
+  //   if (req.kind === "url") return { kind: "reject", feedback: "no network" };
+  gio.gatePermission(() => undefined);
 }

@@ -27,6 +27,12 @@ describe("assembleSystemPrompt", () => {
     expect(out).toMatch(/skill/i);
   });
 
+  it("includes the memory manifest under a heading when given", () => {
+    const out = assembleSystemPrompt({ memoryManifest: "- Dark mode: prefers dark" });
+    expect(out).toContain("Dark mode: prefers dark");
+    expect(out).toMatch(/memory/i);
+  });
+
   it("appends extension fragments", () => {
     const out = assembleSystemPrompt({ extensionFragments: ["Prefer conventional commits."] });
     expect(out).toContain("Prefer conventional commits.");

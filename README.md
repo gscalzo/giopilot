@@ -108,6 +108,32 @@ export default function (gio: HarnessAPI) {
 
 A failing extension is reported, never fatal — one bad module won't take down the harness.
 
+### Memory
+
+giopilot can remember durable facts across sessions. The agent has two tools:
+
+- `remember` — save a fact (`name`, `content`, optional `description`/`type`).
+- `recall` — search saved memories and read them in full.
+
+Memories are stored as `memory/<slug>.md` (with frontmatter) plus a generated `MEMORY.md`
+index, under the project `.giopilot/memory/` if present, else `~/.giopilot/memory/`. The
+one-line index is injected into the prompt each turn; full content is loaded on `recall`.
+
+### Permissions
+
+By default giopilot approves all tool requests. You can restrict kinds in `settings.json`:
+
+```json
+{
+  "model": "auto",
+  "permissions": { "shell": "deny", "url": "deny" }
+}
+```
+
+Kinds: `shell`, `write`, `read`, `url`, `mcp`, `custom-tool`, `memory`, `hook`. Extensions
+can also add fine-grained gates via `gio.gatePermission(req => …)`; gates run first, then
+the settings policy.
+
 ## Development
 
 ```bash
@@ -121,11 +147,9 @@ Built test-first (TDD). Core logic lives in small, unit-tested modules
 
 ## Roadmap
 
-Phases 1–2 are done. Planned additive phases:
-
 - **Phase 1** ✅ — simplistic Pi core: minimal prompt, lazy skills, extensions, wrap the SDK loop.
-- **Phase 2** ✅ — Ink TUI + runtime `/model` picker (`client.listModels()`) + `--model` flag.
-- **Phase 3** — memory store (`remember`/`recall`) + permission gating.
+- **Phase 2** ✅ — Ink TUI + `/model` picker (`client.listModels()`) + `--model` flag + command autocomplete.
+- **Phase 3** ✅ — memory store (`remember`/`recall`, `memory/*.md` + `MEMORY.md` index) + permission gating.
 - **Phase 4** — `giopilot update`, release CI, strict quality gates (coverage, complexity).
 
 See `PLAN.md` for the full plan.

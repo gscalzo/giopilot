@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { parse as parseYaml } from "yaml";
+import { parseFrontmatter } from "../frontmatter.js";
 
 /** Metadata for one discovered skill. The full body is read lazily. */
 export interface SkillMeta {
@@ -12,26 +12,6 @@ export interface SkillMeta {
   path: string;
 }
 
-interface Parsed {
-  frontmatter: Record<string, unknown>;
-  body: string;
-}
-
-const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/;
-
-function splitFrontmatter(raw: string): Parsed {
-  const match = FRONTMATTER_RE.exec(raw);
-  if (!match) return { frontmatter: {}, body: raw };
-  let frontmatter: Record<string, unknown> = {};
-  try {
-    const parsed = parseYaml(match[1] ?? "");
-    if (parsed && typeof parsed === "object") frontmatter = parsed as Record<string, unknown>;
-  } catch {
-    frontmatter = {};
-  }
-  return { frontmatter, body: raw.slice(match[0].length).replace(/^\n+/, "") };
-}
-
 function str(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
@@ -39,10 +19,10 @@ function str(value: unknown): string {
 function loadSkillDir(skillDir: string, dirName: string): SkillMeta | null {
   const file = join(skillDir, dirName, "SKILL.md");
   if (!existsSync(file)) return null;
-  const { frontmatter } = splitFrontmatter(readFileSync(file, "utf8"));
+  const { data } = parseFrontmatter(readFileSync(file, "utf8"));
   return {
-    name: str(frontmatter.name) || dirName,
-    description: str(frontmatter.description),
+    name: str(data.name) || dirName,
+    description: str(data.description),
     path: file,
   };
 }
@@ -67,6 +47,6 @@ export function discoverSkills(skillDirs: string[]): SkillMeta[] {
 
 /** Read a skill's full markdown body (frontmatter stripped). */
 export function readSkillBody(skill: SkillMeta): string {
-  const { body } = splitFrontmatter(readFileSync(skill.path, "utf8"));
+  const { body } = parseFrontmatter(readFileSync(skill.path, "utf8"));
   return body;
 }

@@ -2,10 +2,15 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+/** Per-permission-kind policy, e.g. { "shell": "deny" }. Unlisted kinds are allowed. */
+export type PermissionPolicy = Record<string, "allow" | "deny">;
+
 /** User-tunable settings, read from settings.json (global then project). */
 export interface Settings {
   /** Model id passed to the Copilot session. */
   model: string;
+  /** Optional per-kind permission policy (shell, write, read, url, mcp, ...). */
+  permissions?: PermissionPolicy;
 }
 
 /** Fully resolved configuration for a giopilot run. */
@@ -19,6 +24,8 @@ export interface ResolvedConfig {
   skillDirs: string[];
   /** Existing `extensions/` dirs, global first then project. */
   extensionDirs: string[];
+  /** `memory/` dir to read/write durable memories (project if present, else global). */
+  memoryDir: string;
 }
 
 export interface LoadConfigOptions {
@@ -74,5 +81,6 @@ export function loadConfig(options: LoadConfigOptions = {}): ResolvedConfig {
     projectDir,
     skillDirs: collect(scopes, "skills"),
     extensionDirs: collect(scopes, "extensions"),
+    memoryDir: join(projectDir ?? globalDir, "memory"),
   };
 }

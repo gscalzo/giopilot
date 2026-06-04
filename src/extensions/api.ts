@@ -1,5 +1,6 @@
 import type { Tool } from "@github/copilot-sdk";
 import type { Settings } from "../config.js";
+import type { PermissionGate } from "../permissions.js";
 
 /** Context handed to an extension command when it runs from the REPL. */
 export interface CommandRunContext {
@@ -32,6 +33,8 @@ export interface HarnessAPI {
   registerCommand(name: string, handler: ExtensionCommandHandler): void;
   /** Append a fragment to the system prompt. */
   addSystemPrompt(fragment: string): void;
+  /** Add a permission gate; return a decision to handle a request, or undefined to abstain. */
+  gatePermission(gate: PermissionGate): void;
 }
 
 /** Everything extensions contributed, collected for the harness to consume. */
@@ -40,12 +43,14 @@ export interface ExtensionRegistry {
   tools: Tool<unknown>[];
   commands: Map<string, ExtensionCommand>;
   fragments: string[];
+  gates: PermissionGate[];
 }
 
 export function createExtensionRegistry(settings: Settings): ExtensionRegistry {
   const tools: Tool<unknown>[] = [];
   const commands = new Map<string, ExtensionCommand>();
   const fragments: string[] = [];
+  const gates: PermissionGate[] = [];
 
   const api: HarnessAPI = {
     settings,
@@ -58,7 +63,10 @@ export function createExtensionRegistry(settings: Settings): ExtensionRegistry {
     addSystemPrompt(fragment) {
       fragments.push(fragment);
     },
+    gatePermission(gate) {
+      gates.push(gate);
+    },
   };
 
-  return { api, tools, commands, fragments };
+  return { api, tools, commands, fragments, gates };
 }

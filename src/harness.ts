@@ -1,11 +1,14 @@
-import { CopilotClient, approveAll } from "@github/copilot-sdk";
-import type { Tool } from "@github/copilot-sdk";
+import { CopilotClient } from "@github/copilot-sdk";
+import type { Tool, PermissionHandler } from "@github/copilot-sdk";
 import type { ResolvedConfig } from "./config.js";
+import { composePermissions } from "./permissions.js";
 import { assembleSystemPrompt } from "./systemPrompt.js";
 import { discoverSkills, readSkillBody, type SkillMeta } from "./skills/loader.js";
 import { buildManifest, createLoadSkillTool } from "./skills/inject.js";
 import { createExtensionRegistry, type ExtensionCommand } from "./extensions/api.js";
 import { loadExtensions, type ExtensionLoadResult } from "./extensions/loader.js";
+import { listMemories } from "./memory/store.js";
+import { createRememberTool, createRecallTool } from "./memory/tools.js";
 
 /** A model as surfaced to the picker. */
 export interface ModelInfoLike {
@@ -88,17 +91,28 @@ export async function createHarness(
   const registry = createExtensionRegistry(config.settings);
   const extensionResults = await loadExtensions(config.extensionDirs, registry.api);
 
+  const memoryManifest = listMemories(config.memoryDir)
+    .map((m) => `- ${m.name}: ${m.description || "(no description)"}`)
+    .join("\n");
+
   const systemPrompt = assembleSystemPrompt({
     skillManifest: buildManifest(skills),
+    memoryManifest,
     extensionFragments: registry.fragments,
   });
 
   const tools: Tool<unknown>[] = [
     createLoadSkillTool(skills) as Tool<unknown>,
+    createRememberTool(config.memoryDir) as Tool<unknown>,
+    createRecallTool(config.memoryDir) as Tool<unknown>,
     ...registry.tools,
   ];
 
   let model = config.settings.model;
+  const onPermissionRequest = composePermissions(
+    config.settings.permissions ?? {},
+    registry.gates,
+  ) as unknown as PermissionHandler;
 
   async function openSession(): Promise<SessionLike> {
     const session = await client.createSession({
@@ -106,7 +120,7 @@ export async function createHarness(
       streaming: true,
       systemMessage: { mode: "replace", content: systemPrompt },
       tools,
-      onPermissionRequest: approveAll,
+      onPermissionRequest,
     });
     wireEvents(session, render);
     return session;

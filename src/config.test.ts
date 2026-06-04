@@ -31,6 +31,18 @@ describe("loadConfig", () => {
     expect(cfg.extensionDirs).toEqual([]);
   });
 
+  it("points memoryDir at the global dir when there is no project dir", () => {
+    const cfg = loadConfig({ home: dirs.home, cwd: dirs.cwd });
+    expect(cfg.memoryDir).toBe(join(dirs.home, ".giopilot", "memory"));
+  });
+
+  it("points memoryDir at the project dir when present", () => {
+    const p = join(dirs.cwd, ".giopilot");
+    mkdirSync(p, { recursive: true });
+    const cfg = loadConfig({ home: dirs.home, cwd: dirs.cwd });
+    expect(cfg.memoryDir).toBe(join(p, "memory"));
+  });
+
   it("reads model from global settings.json", () => {
     const g = join(dirs.home, ".giopilot");
     mkdirSync(g, { recursive: true });
