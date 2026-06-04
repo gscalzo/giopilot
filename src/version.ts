@@ -66,12 +66,14 @@ async function latestFromGitHub(fetchImpl: FetchLike, repo: string): Promise<str
 /** Check npm (then GitHub releases) for a newer published version. */
 export async function checkForUpdate(current: string, options: CheckOptions = {}): Promise<UpdateInfo> {
   const fetchImpl = options.fetchImpl ?? (globalThis.fetch as unknown as FetchLike);
+  const sources: [Exclude<UpdateSource, "none">, () => Promise<string | null>][] = [
+    ["npm", () => latestFromNpm(fetchImpl, options.pkg ?? DEFAULT_PKG)],
+    ["github", () => latestFromGitHub(fetchImpl, options.repo ?? DEFAULT_REPO)],
+  ];
 
-  const npm = await latestFromNpm(fetchImpl, options.pkg ?? DEFAULT_PKG);
-  if (npm) return { current, latest: npm, updateAvailable: isNewer(npm, current), source: "npm" };
-
-  const gh = await latestFromGitHub(fetchImpl, options.repo ?? DEFAULT_REPO);
-  if (gh) return { current, latest: gh, updateAvailable: isNewer(gh, current), source: "github" };
-
+  for (const [source, fetchLatest] of sources) {
+    const latest = await fetchLatest();
+    if (latest) return { current, latest, updateAvailable: isNewer(latest, current), source };
+  }
   return { current, latest: null, updateAvailable: false, source: "none" };
 }

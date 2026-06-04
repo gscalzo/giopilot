@@ -46,25 +46,33 @@ async function runExtensionCommand(
   await command.handler(args, { args, print: io.print });
 }
 
-async function dispatchCommand(body: string, harness: Harness, io: ReplIO): Promise<ReplResult> {
-  const [head = "", ...rest] = body.split(/\s+/);
-  const args = rest.join(" ");
+type Builtin = (harness: Harness, io: ReplIO) => ReplResult;
 
-  if (head === "exit" || head === "quit") return "exit";
-  if (head === "model") return "model";
-  if (head === "help") {
+const BUILTINS: Record<string, Builtin> = {
+  exit: () => "exit",
+  quit: () => "exit",
+  model: () => "model",
+  help: (_harness, io) => {
     io.print(HELP);
     return "continue";
-  }
-  if (head === "skills") {
+  },
+  skills: (harness, io) => {
     printSkills(harness, io);
     return "continue";
-  }
+  },
+};
+
+async function dispatchCommand(body: string, harness: Harness, io: ReplIO): Promise<ReplResult> {
+  const [head = "", ...rest] = body.split(/\s+/);
+
+  const builtin = BUILTINS[head];
+  if (builtin) return builtin(harness, io);
+
   if (head.startsWith("skill:")) {
     await runSkill(head.slice("skill:".length), harness, io);
     return "continue";
   }
-  await runExtensionCommand(head, args, harness, io);
+  await runExtensionCommand(head, rest.join(" "), harness, io);
   return "continue";
 }
 

@@ -95,17 +95,19 @@ export class SessionController {
     this.addLine("assistant", text);
   }
 
+  private async applyResult(result: "continue" | "exit" | "model"): Promise<void> {
+    if (result === "exit") return this.onExit();
+    if (result === "model") return this.openModelPicker();
+    this.update({ status: "idle" });
+  }
+
   async submit(input: string): Promise<void> {
     const trimmed = input.trim();
     if (trimmed.length === 0 || !this.harness) return;
     if (!trimmed.startsWith("/")) this.addLine("user", trimmed);
 
     this.update({ status: "thinking" });
-    const result = await handleInput(trimmed, this.harness, this.io);
-
-    if (result === "exit") return this.onExit();
-    if (result === "model") return this.openModelPicker();
-    this.update({ status: "idle" });
+    await this.applyResult(await handleInput(trimmed, this.harness, this.io));
   }
 
   async openModelPicker(): Promise<void> {

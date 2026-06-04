@@ -32,15 +32,18 @@ function loadSkillDir(skillDir: string, dirName: string): SkillMeta | null {
  * Each immediate subdirectory containing a SKILL.md becomes a skill. When the
  * same skill `name` appears more than once, later directories win.
  */
+function skillsInDir(skillDir: string): SkillMeta[] {
+  if (!existsSync(skillDir)) return [];
+  return readdirSync(skillDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => loadSkillDir(skillDir, entry.name))
+    .filter((skill): skill is SkillMeta => skill !== null);
+}
+
 export function discoverSkills(skillDirs: string[]): SkillMeta[] {
   const byName = new Map<string, SkillMeta>();
   for (const skillDir of skillDirs) {
-    if (!existsSync(skillDir)) continue;
-    for (const entry of readdirSync(skillDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const skill = loadSkillDir(skillDir, entry.name);
-      if (skill) byName.set(skill.name, skill);
-    }
+    for (const skill of skillsInDir(skillDir)) byName.set(skill.name, skill);
   }
   return [...byName.values()];
 }

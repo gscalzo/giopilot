@@ -139,18 +139,26 @@ the settings policy.
 ```bash
 npm test               # run the Vitest suite
 npm run test:coverage  # with coverage (≥80% enforced)
+npm run lint           # ESLint (incl. cyclomatic complexity ≤ 5)
+npm run check          # lint + typecheck + coverage (the full gate)
 npm run dev -- "task"  # run from source via tsx
 ```
 
 Built test-first (TDD). Core logic lives in small, unit-tested modules
-(`config`, `systemPrompt`, `skills/*`, `extensions/*`, `harness`, `repl`).
+(`config`, `systemPrompt`, `skills/*`, `extensions/*`, `memory/*`, `permissions`,
+`version`, `harness`, `repl`, `ui/controller`).
+
+**Quality gates** run both locally (Husky `pre-commit` → `npm run check`) and in CI
+(`.github/workflows/ci.yml`): ESLint clean, cyclomatic complexity `< 6`, and test coverage
+`≥ 80%`. Tagging `vX.Y.Z` triggers `release.yml` to publish to npm and cut a GitHub Release
+(needs an `NPM_TOKEN` secret).
 
 ## Roadmap
 
 - **Phase 1** ✅ — simplistic Pi core: minimal prompt, lazy skills, extensions, wrap the SDK loop.
 - **Phase 2** ✅ — Ink TUI + `/model` picker (`client.listModels()`) + `--model` flag + command autocomplete.
 - **Phase 3** ✅ — memory store (`remember`/`recall`, `memory/*.md` + `MEMORY.md` index) + permission gating.
-- **Phase 4** — `giopilot update`, release CI, strict quality gates (coverage, complexity).
+- **Phase 4** ✅ — `giopilot update`, release CI, strict quality gates (lint, coverage ≥80%, complexity).
 
 See `PLAN.md` for the full plan.
 

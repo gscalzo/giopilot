@@ -60,23 +60,28 @@ function collect(dirs: (string | null)[], name: string): string[] {
     .filter((d): d is string => d !== null);
 }
 
-export function loadConfig(options: LoadConfigOptions = {}): ResolvedConfig {
-  const home = options.home ?? homedir();
-  const cwd = options.cwd ?? process.cwd();
-
+function resolveScopes(home: string, cwd: string): { globalDir: string; projectDir: string | null } {
   const globalDir = join(home, CONFIG_DIRNAME);
   const candidateProject = join(cwd, CONFIG_DIRNAME);
-  const projectDir = existsSync(candidateProject) ? candidateProject : null;
+  return { globalDir, projectDir: existsSync(candidateProject) ? candidateProject : null };
+}
 
-  const settings: Settings = {
+function mergeSettings(globalDir: string, projectDir: string | null): Settings {
+  return {
     ...DEFAULT_SETTINGS,
     ...readSettings(globalDir),
     ...(projectDir ? readSettings(projectDir) : {}),
   };
+}
 
+export function loadConfig(options: LoadConfigOptions = {}): ResolvedConfig {
+  const home = options.home ?? homedir();
+  const cwd = options.cwd ?? process.cwd();
+  const { globalDir, projectDir } = resolveScopes(home, cwd);
   const scopes = [globalDir, projectDir];
+
   return {
-    settings,
+    settings: mergeSettings(globalDir, projectDir),
     globalDir,
     projectDir,
     skillDirs: collect(scopes, "skills"),

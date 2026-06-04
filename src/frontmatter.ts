@@ -9,20 +9,21 @@ export interface Frontmatter {
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/;
 
+function parseYamlSafe(text: string): Record<string, unknown> {
+  try {
+    const parsed = parseYaml(text);
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
 /** Split a markdown document into its YAML frontmatter and body. */
 export function parseFrontmatter(raw: string): Frontmatter {
   const match = FRONTMATTER_RE.exec(raw);
   if (!match) return { data: {}, body: raw };
-
-  let data: Record<string, unknown> = {};
-  try {
-    const parsed = parseYaml(match[1] ?? "");
-    if (parsed && typeof parsed === "object") data = parsed as Record<string, unknown>;
-  } catch {
-    data = {};
-  }
   const body = raw.slice(match[0].length).replace(/^\n+/, "").replace(/\n+$/, "");
-  return { data, body };
+  return { data: parseYamlSafe(match[1] ?? ""), body };
 }
 
 /** Render a markdown document with a YAML frontmatter block. */

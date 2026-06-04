@@ -32,17 +32,20 @@ async function loadOne(full: string, api: HarnessAPI): Promise<ExtensionLoadResu
  * register tools, commands, and system-prompt fragments. Failures are reported,
  * never thrown, so one bad extension can't take down the harness.
  */
+function extensionFilesIn(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && EXTENSION_FILE_RE.test(entry.name))
+    .map((entry) => join(dir, entry.name));
+}
+
 export async function loadExtensions(
   dirs: string[],
   api: HarnessAPI,
 ): Promise<ExtensionLoadResult[]> {
   const results: ExtensionLoadResult[] = [];
   for (const dir of dirs) {
-    if (!existsSync(dir)) continue;
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isFile() || !EXTENSION_FILE_RE.test(entry.name)) continue;
-      results.push(await loadOne(join(dir, entry.name), api));
-    }
+    for (const file of extensionFilesIn(dir)) results.push(await loadOne(file, api));
   }
   return results;
 }

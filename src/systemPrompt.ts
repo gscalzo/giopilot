@@ -40,23 +40,20 @@ function section(title: string, body: string): string {
   return `\n\n## ${title}\n${body}`;
 }
 
+function nonEmptySections(options: AssembleOptions): [string, string][] {
+  const fragments = (options.extensionFragments ?? []).filter((f) => f.trim().length > 0);
+  const candidates: [string, string][] = [
+    ["Available skills", (options.skillManifest ?? "").trim()],
+    ["Memory", (options.memoryManifest ?? "").trim()],
+    ["Extension instructions", fragments.join("\n")],
+  ];
+  return candidates.filter(([, body]) => body.length > 0);
+}
+
 export function assembleSystemPrompt(options: AssembleOptions): string {
   const parts: string[] = [MINIMAL_SYSTEM_PROMPT];
-
-  const manifest = options.skillManifest?.trim();
-  if (manifest) {
-    parts.push(section("Available skills", manifest));
+  for (const [title, body] of nonEmptySections(options)) {
+    parts.push(section(title, body));
   }
-
-  const memory = options.memoryManifest?.trim();
-  if (memory) {
-    parts.push(section("Memory", memory));
-  }
-
-  const fragments = (options.extensionFragments ?? []).filter((f) => f.trim().length > 0);
-  if (fragments.length > 0) {
-    parts.push(section("Extension instructions", fragments.join("\n")));
-  }
-
   return parts.join("");
 }

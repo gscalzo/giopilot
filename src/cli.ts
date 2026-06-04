@@ -79,21 +79,26 @@ async function runInteractive(config: ReturnType<typeof loadConfig>): Promise<vo
   await harness.stop();
 }
 
-async function main(): Promise<void> {
-  const { model, rest } = parseModelFlag(argv.slice(2));
-
-  if (rest.includes("-h") || rest.includes("--help")) {
+async function handleImmediate(rest: string[]): Promise<boolean> {
+  const has = (...flags: string[]) => flags.some((f) => rest.includes(f));
+  if (has("-h", "--help")) {
     stdout.write(USAGE + "\n");
-    return;
+    return true;
   }
-  if (rest.includes("-v") || rest.includes("--version")) {
+  if (has("-v", "--version")) {
     stdout.write(readVersion() + "\n");
-    return;
+    return true;
   }
   if (rest[0] === "update") {
     await runUpdate();
-    return;
+    return true;
   }
+  return false;
+}
+
+async function main(): Promise<void> {
+  const { model, rest } = parseModelFlag(argv.slice(2));
+  if (await handleImmediate(rest)) return;
 
   const config = loadConfig();
   if (model) config.settings.model = model;
