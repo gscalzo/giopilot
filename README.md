@@ -48,10 +48,12 @@ tool calls shown as dim notices.
 
 The header is a **status line**: `model · status · ⎇ branch · ◆ credits`. It shows the
 current model, whether the agent is idle/thinking, the git branch of the working directory,
-and your GitHub Copilot quota (premium requests when entitled, else chat) as
-`remaining/total (percent)` — the same figure VS Code shows on hover. Credits are fetched
-best-effort from GitHub's Copilot endpoint using your `gh`/env token; the segment is omitted
-if unavailable.
+and your GitHub Copilot **Credits** (premium requests when entitled, else chat) as
+`used / total used` — computed exactly as the VS Code Copilot extension does
+(`used = entitlement × (1 − percent_remaining/100)`), from the same `copilot_internal/user`
+endpoint. Credits are fetched best-effort using your `GITHUB_TOKEN`/`GH_TOKEN` env var or
+`gh auth token`; the segment is omitted if unavailable. To see a different account's credits
+(e.g. a Copilot Enterprise org), set `GITHUB_TOKEN` to that account's token.
 
 ## Configuration layout
 

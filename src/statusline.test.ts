@@ -11,8 +11,8 @@ describe("formatStatusLine", () => {
   });
 
   it("includes credits when present", () => {
-    expect(formatStatusLine({ model: "auto", status: "idle", credits: "194/200 (97%)" })).toContain(
-      "◆ 194/200 (97%)",
+    expect(formatStatusLine({ model: "auto", status: "idle", credits: "3,189.2 / 6,800 used" })).toContain(
+      "◆ 3,189.2 / 6,800 used",
     );
   });
 
@@ -23,7 +23,7 @@ describe("formatStatusLine", () => {
 
   it("joins all segments with a middot in order", () => {
     expect(
-      formatStatusLine({ model: "gpt-5-mini", status: "thinking", branch: "dev", credits: "10/300 (3%)" }),
-    ).toBe("model: gpt-5-mini · thinking · ⎇ dev · ◆ 10/300 (3%)");
+      formatStatusLine({ model: "gpt-5-mini", status: "thinking", branch: "dev", credits: "10 / 300 used" }),
+    ).toBe("model: gpt-5-mini · thinking · ⎇ dev · ◆ 10 / 300 used");
   });
 });

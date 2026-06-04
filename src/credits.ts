@@ -1,7 +1,9 @@
-/** A parsed Copilot quota snapshot. */
+/** A parsed Copilot quota snapshot, shaped like the VS Code extension's "Credits". */
 export interface CreditsInfo {
   quotaId: string;
-  remaining: number;
+  /** Amount used: entitlement * (1 - percentRemaining/100), as VS Code computes it. */
+  used: number;
+  /** Total entitlement for the period. */
   entitlement: number;
   unlimited: boolean;
 }
@@ -15,25 +17,25 @@ export type FetchLike = (
 const ENDPOINT = "https://api.github.com/copilot_internal/user";
 
 interface RawSnapshot {
-  remaining?: unknown;
   entitlement?: unknown;
+  percent_remaining?: unknown;
   unlimited?: unknown;
 }
 
+// Mirrors vscode-copilot-chat: used = entitlement * (1 - percentRemaining/100).
 function toInfo(quotaId: string, snap: RawSnapshot): CreditsInfo {
-  return {
-    quotaId,
-    remaining: Number(snap.remaining ?? 0),
-    entitlement: Number(snap.entitlement ?? 0),
-    unlimited: Boolean(snap.unlimited),
-  };
+  const entitlement = Number(snap.entitlement ?? 0);
+  const percentRemaining = Number(snap.percent_remaining ?? 0);
+  const used = Math.max(0, entitlement * (1 - percentRemaining / 100));
+  return { quotaId, used, entitlement, unlimited: Boolean(snap.unlimited) || entitlement === -1 };
 }
 
 function isEntitled(snap: RawSnapshot): boolean {
-  return Number(snap.entitlement ?? 0) > 0 || Boolean(snap.unlimited);
+  const entitlement = Number(snap.entitlement ?? 0);
+  return entitlement > 0 || entitlement === -1 || Boolean(snap.unlimited);
 }
 
-/** Pick premium_interactions when it is entitled, otherwise fall back to chat. */
+/** Pick premium_interactions (the "Credits") when entitled, otherwise fall back to chat. */
 export function parseCredits(body: unknown): CreditsInfo | null {
   const snapshots = (body as { quota_snapshots?: Record<string, RawSnapshot> }).quota_snapshots;
   if (!snapshots) return null;
@@ -43,11 +45,14 @@ export function parseCredits(body: unknown): CreditsInfo | null {
   return snapshots.chat ? toInfo("chat", snapshots.chat) : null;
 }
 
-/** Render credits compactly, e.g. "194/200 (97%)" or "∞" (matching VS Code's hover). */
+function fmt(n: number): string {
+  return n.toLocaleString("en-US", { maximumFractionDigits: 1 });
+}
+
+/** Render credits as VS Code does on hover, e.g. "3,189.2 / 6,800 used" or "∞". */
 export function formatCredits(info: CreditsInfo): string {
   if (info.unlimited) return "∞";
-  const pct = info.entitlement > 0 ? Math.round((info.remaining / info.entitlement) * 100) : 0;
-  return `${info.remaining}/${info.entitlement} (${pct}%)`;
+  return `${fmt(info.used)} / ${fmt(info.entitlement)} used`;
 }
 
 /** Best-effort fetch of Copilot quota from GitHub's internal endpoint. Null on any failure. */
