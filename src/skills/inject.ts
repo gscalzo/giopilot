@@ -1,12 +1,11 @@
 import { defineTool } from "@github/copilot-sdk";
 import type { Tool } from "@github/copilot-sdk";
+import { manifestLines } from "../manifest.js";
 import { readSkillBody, type SkillMeta } from "./loader.js";
 
 /** Build the one-line-per-skill manifest injected into the system prompt each turn. */
 export function buildManifest(skills: SkillMeta[]): string {
-  return skills
-    .map((s) => `- ${s.name}: ${s.description || "(no description)"}`)
-    .join("\n");
+  return manifestLines(skills);
 }
 
 const loadSkillParams: Record<string, unknown> = {

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { parseFrontmatter } from "../frontmatter.js";
+import { parseFrontmatter, frontmatterString } from "../frontmatter.js";
 
 /** Metadata for one discovered skill. The full body is read lazily. */
 export interface SkillMeta {
@@ -12,17 +12,13 @@ export interface SkillMeta {
   path: string;
 }
 
-function str(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
 function loadSkillDir(skillDir: string, dirName: string): SkillMeta | null {
   const file = join(skillDir, dirName, "SKILL.md");
   if (!existsSync(file)) return null;
   const { data } = parseFrontmatter(readFileSync(file, "utf8"));
   return {
-    name: str(data.name) || dirName,
-    description: str(data.description),
+    name: frontmatterString(data, "name") || dirName,
+    description: frontmatterString(data, "description"),
     path: file,
   };
 }

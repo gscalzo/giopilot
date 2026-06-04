@@ -3,7 +3,7 @@ import { argv, stderr, stdout } from "node:process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { loadConfig } from "./config.js";
+import { loadConfig, type ResolvedConfig } from "./config.js";
 import { createHarness, type Harness, type RenderHooks } from "./harness.js";
 import { parseModelFlag } from "./models.js";
 import { checkForUpdate } from "./version.js";
@@ -48,7 +48,7 @@ function reportFailedExtensions(harness: Harness, note: (text: string) => void):
   }
 }
 
-async function runOneShot(config: ReturnType<typeof loadConfig>, task: string): Promise<void> {
+async function runOneShot(config: ResolvedConfig, task: string): Promise<void> {
   const harness = await createHarness(config, { render: oneShotRender() });
   reportFailedExtensions(harness, (t) => stderr.write(`\x1b[31m${t}\x1b[0m\n`));
   await harness.sendTurn(task);
@@ -70,7 +70,7 @@ async function runUpdate(): Promise<void> {
   }
 }
 
-async function runInteractive(config: ReturnType<typeof loadConfig>): Promise<void> {
+async function runInteractive(config: ResolvedConfig): Promise<void> {
   const controller = new SessionController();
   const harness = await createHarness(config, { render: controller.renderHooks() });
   controller.attach(harness);

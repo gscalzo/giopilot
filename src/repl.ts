@@ -1,4 +1,3 @@
-import { createInterface } from "node:readline";
 import { buildManifest } from "./skills/inject.js";
 import type { Harness } from "./harness.js";
 
@@ -62,6 +61,9 @@ const BUILTINS: Record<string, Builtin> = {
   },
 };
 
+/** The built-in slash-command names (without leading slash) — the single source for autocomplete. */
+export const BUILTIN_NAMES = Object.keys(BUILTINS);
+
 async function dispatchCommand(body: string, harness: Harness, io: ReplIO): Promise<ReplResult> {
   const [head = "", ...rest] = body.split(/\s+/);
 
@@ -87,21 +89,4 @@ export async function handleInput(
   if (trimmed.startsWith("/")) return dispatchCommand(trimmed.slice(1), harness, io);
   await harness.sendTurn(trimmed);
   return "continue";
-}
-
-/** Run the interactive readline loop until the user exits. */
-export async function runRepl(harness: Harness, io: ReplIO): Promise<void> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  io.print('giopilot ready. Type /help for commands, /exit to quit.');
-  const prompt = () => {
-    rl.setPrompt("› ");
-    rl.prompt();
-  };
-  prompt();
-  for await (const line of rl) {
-    const result = await handleInput(line, harness, io);
-    if (result === "exit") break;
-    prompt();
-  }
-  rl.close();
 }

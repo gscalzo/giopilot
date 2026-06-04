@@ -9,6 +9,7 @@ import { createExtensionRegistry, type ExtensionCommand } from "./extensions/api
 import { loadExtensions, type ExtensionLoadResult } from "./extensions/loader.js";
 import { listMemories } from "./memory/store.js";
 import { createRememberTool, createRecallTool } from "./memory/tools.js";
+import { manifestLines } from "./manifest.js";
 
 /** A model as surfaced to the picker. */
 export interface ModelInfoLike {
@@ -58,14 +59,20 @@ export interface Harness {
   stop(): Promise<void>;
 }
 
+/** Read a string field from a session event's `data` payload. */
+function field(event: unknown, key: string): string | undefined {
+  const value = (event as { data?: Record<string, unknown> }).data?.[key];
+  return typeof value === "string" ? value : undefined;
+}
+
 function wireEvents(session: SessionLike, render: RenderHooks): void {
   session.on("assistant.message_delta", (event) => {
-    const text = (event as { data?: { deltaContent?: string } }).data?.deltaContent;
-    if (typeof text === "string") render.onDelta?.(text);
+    const text = field(event, "deltaContent");
+    if (text !== undefined) render.onDelta?.(text);
   });
   session.on("tool.execution_start", (event) => {
-    const name = (event as { data?: { toolName?: string } }).data?.toolName;
-    if (typeof name === "string") render.onToolStart?.(name);
+    const name = field(event, "toolName");
+    if (name !== undefined) render.onToolStart?.(name);
   });
   session.on("session.idle", () => render.onIdle?.());
 }
@@ -91,9 +98,7 @@ export async function createHarness(
   const registry = createExtensionRegistry(config.settings);
   const extensionResults = await loadExtensions(config.extensionDirs, registry.api);
 
-  const memoryManifest = listMemories(config.memoryDir)
-    .map((m) => `- ${m.name}: ${m.description || "(no description)"}`)
-    .join("\n");
+  const memoryManifest = manifestLines(listMemories(config.memoryDir));
 
   const systemPrompt = assembleSystemPrompt({
     skillManifest: buildManifest(skills),

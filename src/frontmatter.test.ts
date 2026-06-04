@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseFrontmatter, stringifyFrontmatter } from "./frontmatter.js";
+import { parseFrontmatter, stringifyFrontmatter, frontmatterString } from "./frontmatter.js";
 
 describe("parseFrontmatter", () => {
   it("parses data and strips the block plus leading newlines from the body", () => {
@@ -16,6 +16,18 @@ describe("parseFrontmatter", () => {
     const { data, body } = parseFrontmatter("---\n: : :\n---\nbody");
     expect(data).toEqual({});
     expect(body).toBe("body");
+  });
+});
+
+describe("frontmatterString", () => {
+  it("returns the string value when present", () => {
+    expect(frontmatterString({ name: "x" }, "name")).toBe("x");
+  });
+
+  it("returns the fallback for missing or non-string values", () => {
+    expect(frontmatterString({}, "name", "slug")).toBe("slug");
+    expect(frontmatterString({ name: 42 }, "name", "slug")).toBe("slug");
+    expect(frontmatterString({}, "name")).toBe("");
   });
 });
 

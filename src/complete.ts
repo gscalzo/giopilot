@@ -16,8 +16,9 @@ function longestCommonPrefix(values: string[]): string {
 
 /**
  * Compute command autocomplete for the current input against the available
- * command names (bare tokens, no leading slash). Only completes the command
- * token itself — once the input contains a space (arguments), it stops.
+ * command names (bare tokens, no leading slash, caller-supplied order — the
+ * caller owns sorting). Only completes the command token itself — once the
+ * input contains a space (arguments), it stops.
  */
 export function completeCommand(input: string, names: string[]): Completion {
   if (!input.startsWith("/")) return { matches: [], completed: input };
@@ -25,7 +26,7 @@ export function completeCommand(input: string, names: string[]): Completion {
   const token = input.slice(1);
   if (token.includes(" ")) return { matches: [], completed: input };
 
-  const hits = names.filter((n) => n.startsWith(token)).sort();
+  const hits = names.filter((n) => n.startsWith(token));
   if (hits.length === 0) return { matches: [], completed: input };
 
   return {

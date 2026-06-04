@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseFrontmatter, stringifyFrontmatter } from "../frontmatter.js";
+import { parseFrontmatter, frontmatterString, stringifyFrontmatter } from "../frontmatter.js";
+import { manifestLines } from "../manifest.js";
 
 export type MemoryType = "user" | "feedback" | "project" | "reference";
 
@@ -29,33 +30,30 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function str(value: unknown, fallback = ""): string {
-  return typeof value === "string" ? value : fallback;
-}
-
 function memoryFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).filter((f) => f.endsWith(".md") && f !== INDEX_FILE);
 }
 
-function metaOf(dir: string, file: string): MemoryMeta {
-  const { data } = parseFrontmatter(readFileSync(join(dir, file), "utf8"));
+/** Parse one memory file once, returning both its metadata and body. */
+function parseMemory(dir: string, file: string): { meta: MemoryMeta; body: string } {
+  const { data, body } = parseFrontmatter(readFileSync(join(dir, file), "utf8"));
   const slug = file.replace(/\.md$/, "");
-  return {
-    name: str(data.name, slug),
-    description: str(data.description),
-    type: str(data.type, "reference"),
+  const meta: MemoryMeta = {
+    name: frontmatterString(data, "name", slug),
+    description: frontmatterString(data, "description"),
+    type: frontmatterString(data, "type", "reference"),
     slug,
   };
+  return { meta, body };
 }
 
 export function listMemories(dir: string): MemoryMeta[] {
-  return memoryFiles(dir).map((f) => metaOf(dir, f));
+  return memoryFiles(dir).map((f) => parseMemory(dir, f).meta);
 }
 
 function writeIndex(dir: string): void {
-  const lines = listMemories(dir).map((m) => `- ${m.name}: ${m.description || "(no description)"}`);
-  const content = `# Memory\n\n${lines.join("\n")}\n`;
+  const content = `# Memory\n\n${manifestLines(listMemories(dir))}\n`;
   writeFileSync(join(dir, INDEX_FILE), content);
 }
 
@@ -88,7 +86,7 @@ export function readMemory(dir: string, name: string): string | null {
 export function searchMemories(dir: string, query: string): MemoryMeta[] {
   const needle = query.toLowerCase();
   return memoryFiles(dir)
-    .map((f) => ({ meta: metaOf(dir, f), body: parseFrontmatter(readFileSync(join(dir, f), "utf8")).body }))
+    .map((f) => parseMemory(dir, f))
     .filter(({ meta, body }) =>
       `${meta.name} ${meta.description} ${body}`.toLowerCase().includes(needle),
     )

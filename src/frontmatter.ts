@@ -26,6 +26,16 @@ export function parseFrontmatter(raw: string): Frontmatter {
   return { data: parseYamlSafe(match[1] ?? ""), body };
 }
 
+/** Read a frontmatter field as a string, with a fallback when missing or non-string. */
+export function frontmatterString(
+  data: Record<string, unknown>,
+  key: string,
+  fallback = "",
+): string {
+  const value = data[key];
+  return typeof value === "string" ? value : fallback;
+}
+
 /** Render a markdown document with a YAML frontmatter block. */
 export function stringifyFrontmatter(data: Record<string, unknown>, body: string): string {
   return `---\n${stringifyYaml(data).trimEnd()}\n---\n\n${body}\n`;

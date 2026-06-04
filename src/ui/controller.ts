@@ -1,5 +1,5 @@
 import type { Harness } from "../harness.js";
-import { handleInput, type ReplIO } from "../repl.js";
+import { handleInput, BUILTIN_NAMES, type ReplIO, type ReplResult } from "../repl.js";
 import { toModelChoices, type ModelChoice } from "../models.js";
 
 export type Status = "idle" | "thinking";
@@ -58,7 +58,7 @@ export class SessionController {
 
   /** All command tokens (no leading slash) for autocomplete: builtins, skills, extensions. */
   commandNames(): string[] {
-    const names = ["help", "skills", "model", "exit", "quit"];
+    const names = [...BUILTIN_NAMES];
     if (this.harness) {
       for (const skill of this.harness.skills) names.push(`skill:${skill.name}`);
       names.push(...this.harness.commands.keys());
@@ -95,7 +95,7 @@ export class SessionController {
     this.addLine("assistant", text);
   }
 
-  private async applyResult(result: "continue" | "exit" | "model"): Promise<void> {
+  private async applyResult(result: ReplResult): Promise<void> {
     if (result === "exit") return this.onExit();
     if (result === "model") return this.openModelPicker();
     this.update({ status: "idle" });
