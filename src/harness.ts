@@ -77,7 +77,12 @@ function wireEvents(session: SessionLike, render: RenderHooks): void {
   session.on("session.idle", () => render.onIdle?.());
 }
 
-const defaultClientFactory: ClientFactory = () => new CopilotClient() as unknown as ClientLike;
+const defaultClientFactory: ClientFactory = () =>
+  // Silence the bundled CLI subprocess's Node warnings (e.g. the experimental
+  // node:sqlite notice) so startup output stays clean.
+  new CopilotClient({
+    env: { ...process.env, NODE_NO_WARNINGS: "1" },
+  }) as unknown as ClientLike;
 
 /**
  * Build a giopilot harness: discover skills + extensions, assemble the minimal
