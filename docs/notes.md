@@ -76,6 +76,14 @@ Two routes if we want it:
 2. **Bypass the SDK model layer** — reuse Pi's `@mariozechner/pi-ai` package for inference and
    keep the Copilot SDK only for the harness bits we still want.
 
+## Temporary lodger: `extension/`
+
+The `extension/` folder is an unrelated Chrome extension (**AI-Tell Meter**, a LinkedIn
+AI-writing-pattern flagger) prototyped here before moving to its own repository. It is a
+fully self-contained workspace — own package.json, lint, tests, docs — and the root
+toolchain ignores it entirely. See [extension/README.md](../extension/README.md) and
+[extension/docs/adr/0003](../extension/docs/adr/0003-standalone-workspace.md).
+
 ## Out of scope (for now)
 
 A true Pi-style own-the-loop ReAct agent (the SDK is managed-only), MCP wiring (add via an
