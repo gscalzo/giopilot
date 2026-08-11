@@ -29,14 +29,19 @@ which returns a 0–1 likelihood plus verbatim quotes of the phrases it found
 suspicious. Those quotes are located back to exact offsets locally (LLMs can't be
 trusted with character positions).
 
-**The rubric is the humanizer skill — versioned, and yours to update.** What the
-model is told to look for lives in [`skills/humanizer/SKILL.md`](./skills/humanizer/SKILL.md)
-(giopilot skill format: the tell catalogue plus judging guidance), bundled as the
-default system prompt. The Options page shows it in an editable textarea: edit it
-to update the judge's instructions on the fly (no rebuild), or *Reset to default*
-to track the bundled version again. The JSON output contract is appended in code,
-so rubric edits can't break parsing ([ADR 0006](./docs/adr/0006-humanizer-skill-as-data.md)).
-The deterministic detectors below are this same catalogue, projected into regexes.
+**The rubric is the real humanizer skill — vendored, and updatable in one click.**
+What the model is told to look for is the community-maintained
+[blader/humanizer](https://github.com/blader/humanizer) skill (MIT, based on
+Wikipedia's "Signs of AI writing" guide), vendored verbatim at
+[`skills/humanizer/SKILL.md`](./skills/humanizer/SKILL.md) with provenance in
+`UPSTREAM.json`. A code-owned judging preamble reframes it from a rewriting tool
+into a detection rubric. In Options you can: **Update skill from GitHub** (fetch
+the latest upstream version at runtime — no rebuild), edit the rubric freely, or
+*Reset to default*. Precedence: your edit > downloaded copy > bundled snapshot,
+and the JSON output contract is appended in code so no update or edit can break
+parsing ([ADR 0006](./docs/adr/0006-humanizer-skill-as-data.md),
+[ADR 0008](./docs/adr/0008-upstream-skill-sync.md)). The deterministic detectors
+below approximate the skill's core patterns in fast local regexes.
 
 **The local pattern engine annotates and stands in.** Deterministic detectors always
 run, entirely on-device, pinpointing classic tells at exact offsets for the report.
@@ -111,7 +116,8 @@ The model judge sits behind an interface and is faked in tests — CI needs no A
 ## Project layout
 
 ```
-skills/         the humanizer skill (SKILL.md) — the judge's default rubric
+skills/         the humanizer skill — vendored from blader/humanizer (MIT),
+                with UPSTREAM.json provenance; the judge's default rubric
 src/core        detectors, density scoring, quote location — pure, fully tested
 src/judge       OpenAI-compatible judge client (the primary engine)
 src/adapters    SiteAdapter interface + the LinkedIn adapter — the ONLY file that

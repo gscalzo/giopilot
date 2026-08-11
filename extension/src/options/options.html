@@ -40,7 +40,9 @@
     <label for="skillText">Humanizer skill (judging rubric)</label>
     <textarea id="skillText" rows="14" spellcheck="false"></textarea>
     <p class="hint">Editing this updates the instructions sent to the model; leaving it unchanged keeps tracking the bundled default.</p>
+    <p class="hint">The rubric is the humanizer skill from <a href="https://github.com/blader/humanizer" target="_blank">blader/humanizer</a> (MIT). Click <strong>Update skill from GitHub</strong> to fetch the latest version.</p>
     <button id="resetSkill" type="button">Reset to default</button>
+    <button id="updateSkill" type="button">Update skill from GitHub</button>
     <button id="save">Save</button><span id="status"></span>
     <script src="options.js"></script>
   </body>

@@ -36,8 +36,9 @@ describe("createOpenAiCompatibleJudge", () => {
     const body = JSON.parse(init.body);
     expect(body.model).toBe("test-model");
     expect(body.messages[1].content).toBe("Let us delve into this.");
-    // With no override, the system prompt is the bundled humanizer skill.
-    expect(body.messages[0].content).toContain("Em dashes");
+    // With no override, the system prompt embeds the vendored humanizer skill.
+    expect(body.messages[0].content).toMatch(/em dash/i);
+    expect(body.messages[0].content).toContain("judge, not an editor");
     expect(body.messages[0].content).toContain('"likelihood"');
   });
 
@@ -49,7 +50,7 @@ describe("createOpenAiCompatibleJudge", () => {
     );
     await judge.judge("text");
     const body = JSON.parse((fetchFn.mock.calls[0] as any)[1].body);
-    expect(body.messages[0].content.startsWith("Only flag excessive emojis.")).toBe(true);
+    expect(body.messages[0].content).toContain("Only flag excessive emojis.");
     expect(body.messages[0].content).toContain('"likelihood"');
   });
 

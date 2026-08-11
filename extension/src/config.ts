@@ -15,9 +15,15 @@ export interface MeterConfig {
   checkComments: boolean;
   /**
    * User override of the humanizer rubric sent to the judge. Empty string means
-   * "track the bundled skills/humanizer/SKILL.md default" (ADR 0006).
+   * "track the default" — the downloaded upstream copy if present, else the
+   * bundled skills/humanizer/SKILL.md snapshot (ADR 0006, ADR 0008).
    */
   skillText: string;
+  /**
+   * Latest upstream SKILL.md fetched at runtime via Options → Update skill from
+   * GitHub. Empty string means none downloaded yet (use the bundled snapshot).
+   */
+  downloadedSkill: string;
 }
 
 export const CONFIG_KEY = "aitmConfig";
@@ -29,10 +35,15 @@ export const DEFAULT_CONFIG: MeterConfig = {
   apiKey: "",
   checkComments: true,
   skillText: "",
+  downloadedSkill: "",
 };
 
 function str(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim() !== "" ? value.trim() : fallback;
+}
+
+function optionalStr(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
 /** Merge possibly-partial stored config over the defaults, dropping junk. */
@@ -42,9 +53,10 @@ export function withDefaults(stored: unknown): MeterConfig {
     enabled: partial.enabled !== false,
     baseUrl: str(partial.baseUrl, DEFAULT_CONFIG.baseUrl).replace(/\/+$/, ""),
     model: str(partial.model, DEFAULT_CONFIG.model),
-    apiKey: typeof partial.apiKey === "string" ? partial.apiKey.trim() : "",
+    apiKey: optionalStr(partial.apiKey).trim(),
     checkComments: partial.checkComments !== false,
-    skillText: typeof partial.skillText === "string" ? partial.skillText : "",
+    skillText: optionalStr(partial.skillText),
+    downloadedSkill: optionalStr(partial.downloadedSkill),
   };
 }
 

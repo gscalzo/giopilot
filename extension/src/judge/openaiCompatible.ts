@@ -15,7 +15,7 @@ function requestBody(config: MeterConfig, text: string): unknown {
     temperature: 0,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: buildSystemPrompt(config.skillText) },
+      { role: "system", content: buildSystemPrompt(config) },
       { role: "user", content: text },
     ],
   };

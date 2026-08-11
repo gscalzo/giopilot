@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted.
+Accepted. Amended by [ADR 0008](./0008-upstream-skill-sync.md): the skill file is
+now vendored verbatim from upstream blader/humanizer and can be refreshed at
+runtime; the update-and-override mechanics below still stand.
 
 ## Context
 

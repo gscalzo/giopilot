@@ -14,6 +14,7 @@ describe("withDefaults", () => {
       apiKey: " sk-123 ",
       checkComments: false,
       skillText: "My own rubric.",
+      downloadedSkill: "# fresh upstream",
     });
     expect(config).toEqual({
       enabled: true,
@@ -22,6 +23,7 @@ describe("withDefaults", () => {
       apiKey: "sk-123",
       checkComments: false,
       skillText: "My own rubric.",
+      downloadedSkill: "# fresh upstream",
     });
   });
 
@@ -38,6 +40,7 @@ describe("withDefaults", () => {
       apiKey: null,
       checkComments: "yes",
       skillText: 42,
+      downloadedSkill: null,
     });
     expect(config).toEqual(DEFAULT_CONFIG);
   });
