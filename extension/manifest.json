@@ -15,5 +15,13 @@
       "run_at": "document_idle"
     }
   ],
-  "options_page": "options.html"
+  "options_page": "options.html",
+  "commands": {
+    "expand-truncated": {
+      "suggested_key": {
+        "default": "Alt+Shift+E"
+      },
+      "description": "Expand every “…see more” in the feed so full text can be analysed"
+    }
+  }
 }

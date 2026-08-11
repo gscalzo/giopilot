@@ -46,12 +46,20 @@ function normalizeText(raw: string): string {
     .trim();
 }
 
-function isTruncated(scope: Element, isOwn: (el: Element) => boolean): boolean {
-  const seeMore = [...scope.querySelectorAll(SEE_MORE_CLASS)].find(isOwn);
-  if (seeMore) return true;
-  return [...scope.querySelectorAll("button")].some(
-    (b) => isOwn(b) && SEE_MORE_TEXT.test((b.textContent ?? "").trim()),
+// Finds the scope's own see-more control: the clamp toggle class first, else
+// a button whose trimmed text matches the anchored see-more regex.
+function findSeeMore(scope: Element, isOwn: (el: Element) => boolean): Element | null {
+  const toggle = [...scope.querySelectorAll(SEE_MORE_CLASS)].find(isOwn);
+  if (toggle) return toggle;
+  return (
+    [...scope.querySelectorAll("button")].find(
+      (b) => isOwn(b) && SEE_MORE_TEXT.test((b.textContent ?? "").trim()),
+    ) ?? null
   );
+}
+
+function isTruncated(scope: Element, isOwn: (el: Element) => boolean): boolean {
+  return findSeeMore(scope, isOwn) !== null;
 }
 
 // A see-more toggle inside a nested comment belongs to that comment, not the post.
@@ -124,4 +132,31 @@ function findItems(root: ParentNode): FeedItem[] {
   return out;
 }
 
-export const linkedInAdapter: SiteAdapter = { name: "linkedin-feed", findItems };
+function clickIfElement(el: Element): void {
+  if (el instanceof HTMLElement) el.click();
+}
+
+// Clicks each container's own see-more control at most once, deduping by
+// element identity so a comment matched by two overlapping selectors isn't
+// double-clicked.
+function expandOwn(
+  containers: Iterable<Element>,
+  isOwn: (el: Element) => boolean,
+  clicked: Set<Element>,
+): void {
+  for (const container of containers) {
+    const control = findSeeMore(container, isOwn);
+    if (!control || clicked.has(control)) continue;
+    clicked.add(control);
+    clickIfElement(control);
+  }
+}
+
+function expandTruncated(root: ParentNode): number {
+  const clicked = new Set<Element>();
+  expandOwn(root.querySelectorAll(POST_SELECTOR), notInNestedComment, clicked);
+  expandOwn(root.querySelectorAll(COMMENT_SELECTOR), () => true, clicked);
+  return clicked.size;
+}
+
+export const linkedInAdapter: SiteAdapter = { name: "linkedin-feed", findItems, expandTruncated };

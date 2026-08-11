@@ -19,4 +19,11 @@ export interface FeedItem {
 export interface SiteAdapter {
   name: string;
   findItems(root: ParentNode): FeedItem[];
+  /**
+   * Clicks the host page's own "see more" toggles for every truncated
+   * post/comment currently in the DOM. Returns how many were clicked.
+   * Only ever invoked from an explicit user command (ADR 0007) — adapters
+   * must never call it themselves.
+   */
+  expandTruncated(root: ParentNode): number;
 }

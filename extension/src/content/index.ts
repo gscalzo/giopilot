@@ -11,9 +11,10 @@ import { hashText } from "../core/hash";
 import { scoreText } from "../core/score";
 import type { Flag } from "../core/types";
 import type { JudgeResult } from "../judge/types";
-import type { JudgeRequestMessage, JudgeResponseMessage } from "../messages";
+import type { ExpandRequestMessage, JudgeRequestMessage, JudgeResponseMessage } from "../messages";
 import { combine, type Verdict } from "../verdict";
 import { clearDecoration, decoratePost } from "./decorate";
+import { createExpandButton, updateExpandButton } from "./expandButton";
 import { openReportModal } from "./modal";
 import { buildReport } from "./report";
 
@@ -121,12 +122,31 @@ function pruneDisconnected(): void {
   }
 }
 
+// Expansion only ever runs from an explicit user command — the keyboard
+// shortcut relayed by the background worker, or the floating button (ADR 0007).
+// The resulting DOM mutations re-trigger scan(), where the changed text hash
+// re-analyses each expanded item in full.
+function expandAll(): void {
+  linkedInAdapter.expandTruncated(document);
+}
+
+const expandButton = createExpandButton(document, expandAll);
+
+function truncatedCount(): number {
+  let count = 0;
+  for (const state of states.values()) {
+    if (state.item.truncated && state.item.element.isConnected) count++;
+  }
+  return count;
+}
+
 function scan(): void {
   pruneDisconnected();
   for (const item of linkedInAdapter.findItems(document)) {
     if (item.kind === "comment" && !checkComments) continue;
     process(item);
   }
+  updateExpandButton(expandButton, truncatedCount());
 }
 
 function debounce(fn: () => void, ms: number): () => void {
@@ -143,6 +163,10 @@ async function boot(): Promise<void> {
   } catch {
     // storage unavailable — keep the default (on)
   }
+  document.body.appendChild(expandButton);
+  chrome.runtime.onMessage.addListener((message: ExpandRequestMessage) => {
+    if (message?.type === "aitm-expand") expandAll();
+  });
   const debouncedScan = debounce(scan, 400);
   new MutationObserver(debouncedScan).observe(document.body, { childList: true, subtree: true });
   scan();

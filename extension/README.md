@@ -45,9 +45,16 @@ estimate (`≈` on the badge, "pattern-only estimate" in the report).
 
 **Honest abstention.** Posts under 40 words (comments: 20) or mostly non-Latin text
 get no verdict from anyone — too little signal for an honest read. Posts clamped
-behind "…see more" are analysed on visible text only and marked partial (◐). The
-extension never clicks LinkedIn's UI and never calls LinkedIn's internal APIs; it
-only reads the DOM you are already looking at.
+behind "…see more" are analysed on visible text only and marked partial (◐).
+
+**Expand-all command.** To analyse clamped items in full, press **`Alt+Shift+E`**
+(remap at `chrome://extensions/shortcuts`) or click the floating **"Expand N
+clamped ◐"** button on the feed: the extension clicks every "…see more" toggle
+you could have clicked yourself, the full text streams back through analysis, and
+the ◐ markers disappear. Expansion happens **only** on your explicit command —
+never automatically ([ADR 0007](./docs/adr/0007-user-triggered-expansion.md)).
+Beyond that, the extension never clicks LinkedIn's UI and never calls LinkedIn's
+internal APIs; it only reads the DOM you are already looking at.
 
 Decisions and trade-offs are recorded in [docs/adr/](./docs/adr/) — start with
 [ADR 0005](./docs/adr/0005-model-primary-analysis.md) (model-primary analysis) and

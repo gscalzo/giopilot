@@ -6,7 +6,7 @@
 import { loadConfig } from "../config";
 import { createOpenAiCompatibleJudge } from "../judge/openaiCompatible";
 import type { JudgeResult } from "../judge/types";
-import type { JudgeRequestMessage, JudgeResponseMessage } from "../messages";
+import type { ExpandRequestMessage, JudgeRequestMessage, JudgeResponseMessage } from "../messages";
 
 const cache = new Map<string, JudgeResult>();
 
@@ -37,3 +37,16 @@ chrome.runtime.onMessage.addListener(
     return true; // keep the message channel open for the async response
   },
 );
+
+// The expand-truncated keyboard command (see manifest "commands") relays to the
+// active tab's content script; only a user-invoked command reaches here (ADR 0007).
+async function relayExpandCommand(): Promise<void> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.id === undefined) return;
+  const message: ExpandRequestMessage = { type: "aitm-expand" };
+  await chrome.tabs.sendMessage(tab.id, message).catch(() => undefined);
+}
+
+chrome.commands.onCommand.addListener((command) => {
+  if (command === "expand-truncated") void relayExpandCommand();
+});

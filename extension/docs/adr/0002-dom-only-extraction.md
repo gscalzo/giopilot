@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted.
+Accepted. Amended by [ADR 0007](./0007-user-triggered-expansion.md): "no
+synthetic clicks" is relaxed to "no *unprompted* synthetic clicks" — an explicit
+user command may expand "…see more" toggles.
 
 ## Context
 

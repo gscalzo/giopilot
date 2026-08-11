@@ -129,4 +129,70 @@ describe("linkedInAdapter", () => {
     const items = linkedInAdapter.findItems(root);
     expect(items.map((i) => i.kind)).toEqual(["post"]);
   });
+
+  describe("expandTruncated", () => {
+    function countClicks(selector: string): { calls: () => number } {
+      let calls = 0;
+      document.querySelectorAll(selector).forEach((el) => {
+        el.addEventListener("click", () => {
+          calls += 1;
+        });
+      });
+      return { calls: () => calls };
+    }
+
+    it("clicks a clamped post's and a clamped nested comment's own toggle exactly once, returning 2", () => {
+      const root = feed(`
+        <div data-id="urn:li:activity:900">
+          <span class="update-components-text">Post text…see more</span>
+          <button class="feed-shared-inline-show-more-text__see-more-less-toggle">…see more</button>
+          <article class="comments-comment-entity" data-id="urn:li:comment:(urn:li:activity:900,1)">
+            <span class="comments-comment-item__main-content">Comment text…see more</span>
+            <button>…see more</button>
+          </article>
+        </div>
+      `);
+      const postToggle = countClicks(".feed-shared-inline-show-more-text__see-more-less-toggle");
+      const commentToggle = countClicks("article.comments-comment-entity button");
+
+      const clicked = linkedInAdapter.expandTruncated(root);
+
+      expect(clicked).toBe(2);
+      expect(postToggle.calls()).toBe(1);
+      expect(commentToggle.calls()).toBe(1);
+    });
+
+    it("clicks nothing and returns 0 for an unclamped post with a see-more-comments button", () => {
+      const root = feed(`
+        <div data-id="urn:li:activity:901">
+          <span class="update-components-text">Full text, no clamp.</span>
+          <button>See more comments</button>
+        </div>
+      `);
+      const anyButton = countClicks("button");
+
+      const clicked = linkedInAdapter.expandTruncated(root);
+
+      expect(clicked).toBe(0);
+      expect(anyButton.calls()).toBe(0);
+    });
+
+    it("dedupes a comment matched by both the data-id and class selectors, clicking its toggle once", () => {
+      const root = feed(`
+        <div data-id="urn:li:activity:902">
+          <span class="update-components-text">Post text, not clamped.</span>
+          <article class="comments-comment-entity" data-id="urn:li:comment:(urn:li:activity:902,1)">
+            <span class="comments-comment-item__main-content">Clamped comment…see more</span>
+            <button>…see more</button>
+          </article>
+        </div>
+      `);
+      const toggle = countClicks("article.comments-comment-entity button");
+
+      const clicked = linkedInAdapter.expandTruncated(root);
+
+      expect(clicked).toBe(1);
+      expect(toggle.calls()).toBe(1);
+    });
+  });
 });
