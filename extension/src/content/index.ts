@@ -1,10 +1,11 @@
 /**
  * Content-script orchestrator (browser glue — logic lives in tested modules).
- * Heuristics run for every discovered post; the cloud judge is only consulted
- * for posts that actually enter the viewport, and results are cached by URN.
+ * Heuristics run for every discovered post/comment; the cloud judge is only
+ * consulted for items that actually enter the viewport, cached by URN.
  */
 import { linkedInAdapter } from "../adapters/linkedin";
-import type { ExtractedPost } from "../adapters/types";
+import type { FeedItem } from "../adapters/types";
+import { loadConfig } from "../config";
 import { analyze } from "../core/analyze";
 import { hashText } from "../core/hash";
 import { scoreText } from "../core/score";
@@ -16,8 +17,13 @@ import { decoratePost } from "./decorate";
 import { openReportModal } from "./modal";
 import { buildReport } from "./report";
 
-interface PostState {
-  post: ExtractedPost;
+// Comments are short by nature; see ADR 0004 for the lower abstain floor.
+const COMMENT_MIN_WORDS = 20;
+
+let checkComments = true;
+
+interface ItemState {
+  item: FeedItem;
   hash: string;
   flags: Flag[];
   judge: JudgeResult | null;
@@ -25,35 +31,38 @@ interface PostState {
   judgeRequested: boolean;
 }
 
-const states = new Map<string, PostState>();
+const states = new Map<string, ItemState>();
 const elementIds = new WeakMap<Element, string>();
 
-function decorate(state: PostState): void {
+function decorate(state: ItemState): void {
+  const isComment = state.item.kind === "comment";
+  // Abstaining comments stay unmarked — no badge clutter on "Congrats!" replies.
+  if (isComment && state.verdict.abstain) return;
   decoratePost(
-    state.post.element,
-    { tier: state.verdict.tier, partial: state.post.truncated },
+    state.item.element,
+    { tier: state.verdict.tier, partial: state.item.truncated, compact: isComment },
     () => {
       openReportModal(
         document,
-        buildReport(state.post.text, state.flags, state.verdict, state.judge, state.post.truncated),
+        buildReport(state.item.text, state.flags, state.verdict, state.judge, state.item.truncated),
       );
     },
   );
 }
 
-function applyJudgeResponse(state: PostState, response: JudgeResponseMessage | undefined): void {
+function applyJudgeResponse(state: ItemState, response: JudgeResponseMessage | undefined): void {
   if (!response?.ok) return;
   state.judge = response.result;
   state.verdict = combine(state.verdict.heuristic, response.result);
   decorate(state);
 }
 
-function requestJudgement(state: PostState): void {
+function requestJudgement(state: ItemState): void {
   if (state.judgeRequested || state.verdict.abstain) return;
   state.judgeRequested = true;
   const message: JudgeRequestMessage = {
     type: "aitm-judge",
-    text: state.post.text,
+    text: state.item.text,
     hash: state.hash,
   };
   chrome.runtime.sendMessage(message, (response: JudgeResponseMessage | undefined) => {
@@ -70,25 +79,32 @@ const viewport = new IntersectionObserver((entries) => {
   }
 });
 
-function process(post: ExtractedPost): void {
-  const hash = hashText(post.text);
-  const existing = states.get(post.id);
+function scoreOptions(item: FeedItem): { minWords: number } | undefined {
+  return item.kind === "comment" ? { minWords: COMMENT_MIN_WORDS } : undefined;
+}
+
+function process(item: FeedItem): void {
+  const hash = hashText(item.text);
+  const existing = states.get(item.id);
   if (existing && existing.hash === hash) {
-    existing.post = post; // element may have been re-rendered
+    existing.item = item; // element may have been re-rendered
     decorate(existing);
   } else {
-    const flags = analyze(post.text);
-    const verdict = combine(scoreText(post.text, flags), null);
-    const state: PostState = { post, hash, flags, judge: null, verdict, judgeRequested: false };
-    states.set(post.id, state);
+    const flags = analyze(item.text);
+    const verdict = combine(scoreText(item.text, flags, scoreOptions(item)), null);
+    const state: ItemState = { item, hash, flags, judge: null, verdict, judgeRequested: false };
+    states.set(item.id, state);
     decorate(state);
   }
-  elementIds.set(post.element, post.id);
-  viewport.observe(post.element);
+  elementIds.set(item.element, item.id);
+  viewport.observe(item.element);
 }
 
 function scan(): void {
-  for (const post of linkedInAdapter.findPosts(document)) process(post);
+  for (const item of linkedInAdapter.findItems(document)) {
+    if (item.kind === "comment" && !checkComments) continue;
+    process(item);
+  }
 }
 
 function debounce(fn: () => void, ms: number): () => void {
@@ -99,6 +115,15 @@ function debounce(fn: () => void, ms: number): () => void {
   };
 }
 
-const debouncedScan = debounce(scan, 400);
-new MutationObserver(debouncedScan).observe(document.body, { childList: true, subtree: true });
-scan();
+async function boot(): Promise<void> {
+  try {
+    checkComments = (await loadConfig()).checkComments;
+  } catch {
+    // storage unavailable — keep the default (on)
+  }
+  const debouncedScan = debounce(scan, 400);
+  new MutationObserver(debouncedScan).observe(document.body, { childList: true, subtree: true });
+  scan();
+}
+
+void boot();

@@ -12,17 +12,19 @@ describe("withDefaults", () => {
       baseUrl: "https://api.example.com/v1/",
       model: " my-model ",
       apiKey: " sk-123 ",
+      checkComments: false,
     });
     expect(config).toEqual({
       enabled: true,
       baseUrl: "https://api.example.com/v1",
       model: "my-model",
       apiKey: "sk-123",
+      checkComments: false,
     });
   });
 
   it("drops junk values back to defaults", () => {
-    const config = withDefaults({ enabled: "yes", baseUrl: 42, model: "", apiKey: null });
+    const config = withDefaults({ enabled: "yes", baseUrl: 42, model: "", apiKey: null, checkComments: "yes" });
     expect(config).toEqual(DEFAULT_CONFIG);
   });
 });

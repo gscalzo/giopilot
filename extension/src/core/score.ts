@@ -23,8 +23,8 @@ function tierFor(density: number): Tier {
   return "green";
 }
 
-function abstainReason(text: string, words: number): AbstainReason | undefined {
-  if (words < MIN_WORDS) return "too-short";
+function abstainReason(text: string, words: number, minWords: number): AbstainReason | undefined {
+  if (words < minWords) return "too-short";
   if (latinShare(text) < MIN_LATIN_SHARE) return "non-latin";
   return undefined;
 }
@@ -32,10 +32,12 @@ function abstainReason(text: string, words: number): AbstainReason | undefined {
 /**
  * Density scoring: flag weight per 100 words. The tiers deliberately measure
  * "AI-typical pattern density", never authorship — see ADR 0001.
+ * Abstains on text shorter than options.minWords (default: 40) or mostly non-Latin.
  */
-export function scoreText(text: string, flags: Flag[]): HeuristicScore {
+export function scoreText(text: string, flags: Flag[], options?: { minWords?: number }): HeuristicScore {
+  const minWords = options?.minWords ?? MIN_WORDS;
   const words = countWords(text);
   const totalWeight = flags.reduce((sum, flag) => sum + flag.weight, 0);
   const density = words === 0 ? 0 : Math.round((totalWeight / words) * 1000) / 10;
-  return { words, totalWeight, density, tier: tierFor(density), abstain: abstainReason(text, words) };
+  return { words, totalWeight, density, tier: tierFor(density), abstain: abstainReason(text, words, minWords) };
 }

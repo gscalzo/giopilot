@@ -3,6 +3,7 @@ import type { Tier } from "../core/types";
 export interface DecorationView {
   tier: Tier | null;
   partial: boolean;
+  compact?: boolean;
 }
 
 const COLORS: Record<Tier, string> = {
@@ -30,8 +31,8 @@ function ensureBadge(el: HTMLElement, onOpen: () => void): HTMLButtonElement {
   const badge = el.ownerDocument.createElement("button");
   badge.className = BADGE_CLASS;
   badge.style.cssText =
-    "position:absolute;top:8px;right:8px;z-index:10;font:600 11px/1.6 sans-serif;" +
-    "padding:1px 10px;border-radius:12px;border:none;color:#fff;cursor:pointer;";
+    "position:absolute;z-index:10;font:600 11px/1.6 sans-serif;" +
+    "border-radius:12px;border:none;color:#fff;cursor:pointer;";
   badge.addEventListener("click", (event) => {
     event.stopPropagation();
     onOpen();
@@ -40,10 +41,26 @@ function ensureBadge(el: HTMLElement, onOpen: () => void): HTMLButtonElement {
   return badge;
 }
 
-function applyOutline(el: HTMLElement, tier: Tier | null): void {
+function applyBadgeStyle(badge: HTMLButtonElement, compact?: boolean): void {
+  if (compact) {
+    badge.style.top = "4px";
+    badge.style.right = "4px";
+    badge.style.fontSize = "10px";
+    badge.style.padding = "0 8px";
+  } else {
+    badge.style.top = "8px";
+    badge.style.right = "8px";
+    badge.style.fontSize = "11px";
+    badge.style.padding = "1px 10px";
+  }
+}
+
+function applyOutline(el: HTMLElement, tier: Tier | null, compact?: boolean): void {
   if (tier) {
-    el.style.outline = `3px solid ${COLORS[tier]}`;
-    el.style.outlineOffset = "-3px";
+    const width = compact ? "2px" : "3px";
+    const offset = compact ? "-2px" : "-3px";
+    el.style.outline = `${width} solid ${COLORS[tier]}`;
+    el.style.outlineOffset = offset;
   } else {
     el.style.outline = "";
     el.style.outlineOffset = "";
@@ -61,9 +78,10 @@ function ensurePositioned(el: HTMLElement): void {
  */
 export function decoratePost(el: HTMLElement, view: DecorationView, onOpen: () => void): void {
   ensurePositioned(el);
-  applyOutline(el, view.tier);
+  applyOutline(el, view.tier, view.compact);
   const badge = ensureBadge(el, onOpen);
   badge.style.background = view.tier ? COLORS[view.tier] : "#757575";
   badge.textContent = badgeLabel(view);
+  applyBadgeStyle(badge, view.compact);
   el.dataset.aitmTier = view.tier ?? "none";
 }

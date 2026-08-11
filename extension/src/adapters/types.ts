@@ -1,13 +1,15 @@
-/** A post extracted from a host page. */
-export interface ExtractedPost {
-  /** Stable id for caching, e.g. LinkedIn's activity URN. */
+/** An item (post or comment) extracted from a host page's feed. */
+export interface FeedItem {
+  /** Stable id for caching, e.g. LinkedIn's activity or comment URN. */
   id: string;
   /** The card element to decorate. */
   element: HTMLElement;
-  /** Normalised post text as currently rendered. */
+  /** Normalised text as currently rendered. */
   text: string;
   /** True when the host page has clamped the text ("…see more"). */
   truncated: boolean;
+  /** Whether this item is a top-level post or a comment on one. */
+  kind: "post" | "comment";
 }
 
 /**
@@ -16,5 +18,5 @@ export interface ExtractedPost {
  */
 export interface SiteAdapter {
   name: string;
-  findPosts(root: ParentNode): ExtractedPost[];
+  findItems(root: ParentNode): FeedItem[];
 }

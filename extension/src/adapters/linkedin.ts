@@ -1,8 +1,10 @@
-import type { ExtractedPost, SiteAdapter } from "./types";
+import type { FeedItem, SiteAdapter } from "./types";
 
 // LinkedIn's class names are obfuscated and churn; data-* URN attributes are
 // the stable anchors. All selectors live here and nowhere else.
 const POST_SELECTOR = '[data-id^="urn:li:activity"], [data-urn^="urn:li:activity"]';
+// Comments are rendered as their own cards but nested inside a post's card.
+const COMMENT_SELECTOR = '[data-id^="urn:li:comment"], article.comments-comment-entity';
 
 const TEXT_SELECTORS = [
   ".update-components-update-v2__commentary",
@@ -10,12 +12,25 @@ const TEXT_SELECTORS = [
   ".feed-shared-update-v2__description",
 ];
 
+const COMMENT_TEXT_SELECTORS = [".comments-comment-item__main-content", ".update-components-text"];
+
 const SEE_MORE_CLASS = ".feed-shared-inline-show-more-text__see-more-less-toggle";
 
-function findTextElement(post: Element): Element | null {
-  for (const selector of TEXT_SELECTORS) {
-    const el = post.querySelector(selector);
+function firstMatch(scope: Element, selectors: string[]): Element | null {
+  for (const selector of selectors) {
+    const el = scope.querySelector(selector);
     if (el) return el;
+  }
+  return null;
+}
+
+// A post's text candidate must not actually belong to one of its nested
+// comments, so skip any match sitting inside a comment container.
+function findPostTextElement(post: Element): Element | null {
+  for (const selector of TEXT_SELECTORS) {
+    for (const el of post.querySelectorAll(selector)) {
+      if (!el.closest(COMMENT_SELECTOR)) return el;
+    }
   }
   return null;
 }
@@ -28,34 +43,80 @@ function normalizeText(raw: string): string {
     .trim();
 }
 
-function isTruncated(post: Element): boolean {
-  if (post.querySelector(SEE_MORE_CLASS)) return true;
-  return [...post.querySelectorAll("button")].some((b) => /see more/i.test(b.textContent ?? ""));
+function isTruncated(scope: Element, isOwn: (el: Element) => boolean): boolean {
+  const seeMore = [...scope.querySelectorAll(SEE_MORE_CLASS)].find(isOwn);
+  if (seeMore) return true;
+  return [...scope.querySelectorAll("button")].some((b) => isOwn(b) && /see more/i.test(b.textContent ?? ""));
 }
 
-function withText(el: HTMLElement, id: string): ExtractedPost | null {
-  const text = normalizeText(findTextElement(el)?.textContent ?? "");
+// A see-more toggle inside a nested comment belongs to that comment, not the post.
+function notInNestedComment(el: Element): boolean {
+  return el.closest(COMMENT_SELECTOR) === null;
+}
+
+function isPostTruncated(post: Element): boolean {
+  return isTruncated(post, notInNestedComment);
+}
+
+function isCommentTruncated(comment: Element): boolean {
+  return isTruncated(comment, () => true);
+}
+
+function buildItem(
+  el: HTMLElement,
+  id: string,
+  kind: FeedItem["kind"],
+  text: string,
+  truncated: boolean,
+): FeedItem | null {
   if (text === "") return null;
-  return { id, element: el, text, truncated: isTruncated(el) };
+  return { id, element: el, text, truncated, kind };
 }
 
-function toPost(el: Element): ExtractedPost | null {
+function withPostText(el: HTMLElement, id: string): FeedItem | null {
+  const text = normalizeText(findPostTextElement(el)?.textContent ?? "");
+  return buildItem(el, id, "post", text, isPostTruncated(el));
+}
+
+function withCommentText(el: HTMLElement, id: string): FeedItem | null {
+  const text = normalizeText(firstMatch(el, COMMENT_TEXT_SELECTORS)?.textContent ?? "");
+  return buildItem(el, id, "comment", text, isCommentTruncated(el));
+}
+
+function toPost(el: Element): FeedItem | null {
   const id = el.getAttribute("data-id") ?? el.getAttribute("data-urn");
   if (!id || !(el instanceof HTMLElement)) return null;
-  return withText(el, id);
+  return withPostText(el, id);
 }
 
-function findPosts(root: ParentNode): ExtractedPost[] {
-  const out: ExtractedPost[] = [];
-  const seen = new Set<string>();
-  for (const el of root.querySelectorAll(POST_SELECTOR)) {
-    const post = toPost(el);
-    if (post && !seen.has(post.id)) {
-      seen.add(post.id);
-      out.push(post);
+function toComment(el: Element): FeedItem | null {
+  const id = el.getAttribute("data-id");
+  if (!id || !(el instanceof HTMLElement)) return null;
+  return withCommentText(el, id);
+}
+
+function collect(
+  root: ParentNode,
+  selector: string,
+  toItem: (el: Element) => FeedItem | null,
+  seen: Set<string>,
+  out: FeedItem[],
+): void {
+  for (const el of root.querySelectorAll(selector)) {
+    const item = toItem(el);
+    if (item && !seen.has(item.id)) {
+      seen.add(item.id);
+      out.push(item);
     }
   }
+}
+
+function findItems(root: ParentNode): FeedItem[] {
+  const out: FeedItem[] = [];
+  const seen = new Set<string>();
+  collect(root, POST_SELECTOR, toPost, seen, out);
+  collect(root, COMMENT_SELECTOR, toComment, seen, out);
   return out;
 }
 
-export const linkedInAdapter: SiteAdapter = { name: "linkedin-feed", findPosts };
+export const linkedInAdapter: SiteAdapter = { name: "linkedin-feed", findItems };

@@ -6,6 +6,8 @@ export interface MeterConfig {
   /** Model name as the provider knows it. */
   model: string;
   apiKey: string;
+  /** Whether to check comments in addition to posts. */
+  checkComments: boolean;
 }
 
 export const CONFIG_KEY = "aitmConfig";
@@ -15,6 +17,7 @@ export const DEFAULT_CONFIG: MeterConfig = {
   baseUrl: "https://api.openai.com/v1",
   model: "gpt-4o-mini",
   apiKey: "",
+  checkComments: true,
 };
 
 function str(value: unknown, fallback: string): string {
@@ -29,6 +32,7 @@ export function withDefaults(stored: unknown): MeterConfig {
     baseUrl: str(partial.baseUrl, DEFAULT_CONFIG.baseUrl).replace(/\/+$/, ""),
     model: str(partial.model, DEFAULT_CONFIG.model),
     apiKey: typeof partial.apiKey === "string" ? partial.apiKey.trim() : "",
+    checkComments: partial.checkComments !== false,
   };
 }
 

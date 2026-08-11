@@ -7,6 +7,7 @@ function flag(weight: number): Flag {
 }
 
 const FIFTY_WORDS = Array.from({ length: 50 }, (_, i) => `word${i}`).join(" ");
+const TWENTYFIVE_WORDS = Array.from({ length: 25 }, (_, i) => `word${i}`).join(" ");
 
 describe("scoreText", () => {
   it("computes density per 100 words", () => {
@@ -40,5 +41,10 @@ describe("scoreText", () => {
     const score = scoreText("", []);
     expect(score.density).toBe(0);
     expect(score.abstain).toBe("too-short");
+  });
+
+  it("abstains on ~25-word text by default but not with minWords: 20", () => {
+    expect(scoreText(TWENTYFIVE_WORDS, []).abstain).toBe("too-short");
+    expect(scoreText(TWENTYFIVE_WORDS, [], { minWords: 20 }).abstain).toBeUndefined();
   });
 });

@@ -1,10 +1,10 @@
 # AI-Tell Meter
 
 A Chrome (Manifest V3) extension that flags **AI-typical writing patterns** in your
-LinkedIn feed. Each post gets a coloured border — green / yellow / red — and a badge;
-clicking the badge opens a report modal that lists every detected tell (em dashes,
-"not X, it's Y" contrast templates, stock AI vocabulary, emoji listicles, …) and
-highlights exactly where each one occurs in the post.
+LinkedIn feed. Each post — and, optionally, each comment — gets a coloured border —
+green / yellow / red — and a badge; clicking the badge opens a report modal that lists
+every detected tell (em dashes, "not X, it's Y" contrast templates, stock AI
+vocabulary, emoji listicles, …) and highlights exactly where each one occurs.
 
 > **This is a density meter, not an authorship oracle.** It measures how heavily a post
 > leans on patterns over-represented in LLM output. Humans — especially ghostwritten,
@@ -27,6 +27,11 @@ highlights exactly where each one occurs in the post.
    text only and marked *partial* (◐ on the badge). The extension never clicks
    LinkedIn's UI or calls LinkedIn's internal APIs — it only reads the DOM you are
    already looking at.
+4. **Comments (optional, on by default).** Visible comments run through the same
+   engine with a lower abstain floor (20 words instead of 40) and compact
+   decoration; comments with no verdict get no badge at all, so short "Congrats!"
+   replies stay unmarked. Toggle in Options. See
+   [ADR 0004](./docs/adr/0004-comment-checking.md).
 
 ## Install (unpacked)
 

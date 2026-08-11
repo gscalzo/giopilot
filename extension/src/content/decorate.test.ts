@@ -40,6 +40,32 @@ describe("decoratePost", () => {
     (el.querySelector(".aitm-badge") as HTMLButtonElement).click();
     expect(onOpen).toHaveBeenCalledOnce();
   });
+
+  it("produces a 2px outline and compact badge styles in compact mode", () => {
+    const el = card();
+    decoratePost(el, { tier: "green", partial: false, compact: true }, () => {});
+    expect(el.style.outline).toContain("2px");
+    expect(el.style.outlineOffset).toBe("-2px");
+    const badge = el.querySelector<HTMLButtonElement>("button.aitm-badge")!;
+    expect(badge.style.top).toBe("4px");
+    expect(badge.style.right).toBe("4px");
+    expect(badge.style.fontSize).toBe("10px");
+    expect(badge.style.padding).toBe("0px 8px");
+  });
+
+  it("switches from compact to non-compact by updating the single badge", () => {
+    const el = card();
+    decoratePost(el, { tier: "red", partial: false, compact: true }, () => {});
+    decoratePost(el, { tier: "red", partial: false, compact: false }, () => {});
+    expect(el.querySelectorAll(".aitm-badge")).toHaveLength(1);
+    const badge = el.querySelector<HTMLButtonElement>("button.aitm-badge")!;
+    expect(el.style.outline).toContain("3px");
+    expect(el.style.outlineOffset).toBe("-3px");
+    expect(badge.style.top).toBe("8px");
+    expect(badge.style.right).toBe("8px");
+    expect(badge.style.fontSize).toBe("11px");
+    expect(badge.style.padding).toBe("1px 10px");
+  });
 });
 
 describe("badgeLabel", () => {

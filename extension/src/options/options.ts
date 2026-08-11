@@ -11,6 +11,7 @@ function readForm(): MeterConfig {
     baseUrl: field("baseUrl").value,
     model: field("model").value,
     apiKey: field("apiKey").value,
+    checkComments: field("checkComments").checked,
   });
 }
 
@@ -40,6 +41,7 @@ async function init(): Promise<void> {
   field("baseUrl").value = config.baseUrl;
   field("model").value = config.model;
   field("apiKey").value = config.apiKey;
+  field("checkComments").checked = config.checkComments;
   document.getElementById("save")?.addEventListener("click", () => void save());
 }
 
