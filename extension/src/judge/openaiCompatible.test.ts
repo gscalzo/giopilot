@@ -36,6 +36,21 @@ describe("createOpenAiCompatibleJudge", () => {
     const body = JSON.parse(init.body);
     expect(body.model).toBe("test-model");
     expect(body.messages[1].content).toBe("Let us delve into this.");
+    // With no override, the system prompt is the bundled humanizer skill.
+    expect(body.messages[0].content).toContain("Em dashes");
+    expect(body.messages[0].content).toContain('"likelihood"');
+  });
+
+  it("uses a configured rubric override as the system prompt, keeping the contract", async () => {
+    const fetchFn = vi.fn(async () => chatResponse('{"likelihood": 0.2, "phrases": []}'));
+    const judge = createOpenAiCompatibleJudge(
+      withDefaults({ ...CONFIG, skillText: "Only flag excessive emojis." }),
+      fetchFn as any,
+    );
+    await judge.judge("text");
+    const body = JSON.parse((fetchFn.mock.calls[0] as any)[1].body);
+    expect(body.messages[0].content.startsWith("Only flag excessive emojis.")).toBe(true);
+    expect(body.messages[0].content).toContain('"likelihood"');
   });
 
   it("throws JudgeRequestError on HTTP failure", async () => {

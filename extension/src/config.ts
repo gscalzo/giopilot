@@ -13,6 +13,11 @@ export interface MeterConfig {
   apiKey: string;
   /** Whether to check comments in addition to posts. */
   checkComments: boolean;
+  /**
+   * User override of the humanizer rubric sent to the judge. Empty string means
+   * "track the bundled skills/humanizer/SKILL.md default" (ADR 0006).
+   */
+  skillText: string;
 }
 
 export const CONFIG_KEY = "aitmConfig";
@@ -23,6 +28,7 @@ export const DEFAULT_CONFIG: MeterConfig = {
   model: "gpt-5.6-luna",
   apiKey: "",
   checkComments: true,
+  skillText: "",
 };
 
 function str(value: unknown, fallback: string): string {
@@ -38,6 +44,7 @@ export function withDefaults(stored: unknown): MeterConfig {
     model: str(partial.model, DEFAULT_CONFIG.model),
     apiKey: typeof partial.apiKey === "string" ? partial.apiKey.trim() : "",
     checkComments: partial.checkComments !== false,
+    skillText: typeof partial.skillText === "string" ? partial.skillText : "",
   };
 }
 

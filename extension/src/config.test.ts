@@ -13,6 +13,7 @@ describe("withDefaults", () => {
       model: " my-model ",
       apiKey: " sk-123 ",
       checkComments: false,
+      skillText: "My own rubric.",
     });
     expect(config).toEqual({
       enabled: true,
@@ -20,6 +21,7 @@ describe("withDefaults", () => {
       model: "my-model",
       apiKey: "sk-123",
       checkComments: false,
+      skillText: "My own rubric.",
     });
   });
 
@@ -29,7 +31,14 @@ describe("withDefaults", () => {
   });
 
   it("drops junk values back to defaults", () => {
-    const config = withDefaults({ enabled: "yes", baseUrl: 42, model: "", apiKey: null, checkComments: "yes" });
+    const config = withDefaults({
+      enabled: "yes",
+      baseUrl: 42,
+      model: "",
+      apiKey: null,
+      checkComments: "yes",
+      skillText: 42,
+    });
     expect(config).toEqual(DEFAULT_CONFIG);
   });
 

@@ -6,7 +6,8 @@
     <style>
       body { font: 14px/1.5 sans-serif; max-width: 560px; margin: 32px auto; color: #222; }
       label { display: block; margin: 14px 0 4px; font-weight: 600; }
-      input[type="text"], input[type="password"] { width: 100%; padding: 6px 8px; box-sizing: border-box; }
+      input[type="text"], input[type="password"], textarea { width: 100%; padding: 6px 8px; box-sizing: border-box; }
+      textarea { font-family: monospace; font-size: 12px; }
       .hint { color: #666; font-size: 12px; margin-top: 2px; }
       .privacy { background: #fff6e0; border: 1px solid #e8d59a; border-radius: 6px; padding: 10px 12px; margin: 16px 0; }
       button { margin-top: 16px; padding: 8px 20px; }
@@ -36,6 +37,10 @@
     <label for="apiKey">API key</label>
     <input type="password" id="apiKey" autocomplete="off" />
     <p class="hint">Stored in extension storage on this machine. Anyone with access to this browser profile can read it.</p>
+    <label for="skillText">Humanizer skill (judging rubric)</label>
+    <textarea id="skillText" rows="14" spellcheck="false"></textarea>
+    <p class="hint">Editing this updates the instructions sent to the model; leaving it unchanged keeps tracking the bundled default.</p>
+    <button id="resetSkill" type="button">Reset to default</button>
     <button id="save">Save</button><span id="status"></span>
     <script src="options.js"></script>
   </body>

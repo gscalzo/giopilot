@@ -1,30 +1,21 @@
 import type { MeterConfig } from "../config";
 import { clamp01 } from "../core/clamp";
+import { buildSystemPrompt } from "./prompt";
 import type { Judge, JudgePhrase, JudgeResult } from "./types";
 
 export class JudgeRequestError extends Error {}
-
-const SYSTEM_PROMPT = [
-  "You review a single social-media post and estimate how strongly it exhibits",
-  "patterns typical of AI-generated writing: formulaic contrasts, uniform rhythm,",
-  "stock vocabulary, engagement-formula endings. You are a pattern meter, not an",
-  "authorship oracle. Reply with ONLY a JSON object of the shape",
-  '{"likelihood": <number 0..1>, "summary": "<one sentence>",',
-  ' "phrases": [{"quote": "<EXACT substring copied from the post>", "reason": "<why>"}]}.',
-  "Include at most 10 phrases; every quote must be copied verbatim from the post.",
-].join(" ");
 
 interface ChatCompletionResponse {
   choices?: Array<{ message?: { content?: unknown } }>;
 }
 
-function requestBody(model: string, text: string): unknown {
+function requestBody(config: MeterConfig, text: string): unknown {
   return {
-    model,
+    model: config.model,
     temperature: 0,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: buildSystemPrompt(config.skillText) },
       { role: "user", content: text },
     ],
   };
@@ -88,7 +79,7 @@ async function requestJudgement(
       "content-type": "application/json",
       authorization: `Bearer ${config.apiKey}`,
     },
-    body: JSON.stringify(requestBody(config.model, text)),
+    body: JSON.stringify(requestBody(config, text)),
   });
   if (!response.ok) {
     throw new JudgeRequestError(`judge request failed: HTTP ${response.status}`);

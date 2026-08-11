@@ -11,6 +11,7 @@ await build({
   outdir: "dist",
   format: "iife",
   target: "chrome120",
+  loader: { ".md": "text" },
   logLevel: "info",
 });
 

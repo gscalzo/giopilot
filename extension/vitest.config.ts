@@ -1,6 +1,18 @@
-import { defineConfig } from "vitest/config";
+import { readFileSync } from "node:fs";
+import { defineConfig, type Plugin } from "vitest/config";
+
+// Mirror esbuild's `loader: { ".md": "text" }` so tests can import the skill.
+const mdAsText: Plugin = {
+  name: "md-as-text",
+  enforce: "pre",
+  load(id) {
+    if (!id.endsWith(".md")) return null;
+    return `export default ${JSON.stringify(readFileSync(id, "utf8"))};`;
+  },
+};
 
 export default defineConfig({
+  plugins: [mdAsText],
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
