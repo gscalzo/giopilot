@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted.
+Partially superseded by [ADR 0005](./0005-model-primary-analysis.md): the model's
+tier now wins outright when available, and heuristics are the annotation layer and
+fallback. The offsets-from-heuristics rule, the abstention rules, and the density
+framing below still stand.
 
 ## Context
 

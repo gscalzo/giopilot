@@ -1,5 +1,10 @@
 export interface MeterConfig {
-  /** Whether the cloud judge is enabled at all. Heuristics always run. */
+  /**
+   * Whether the cloud judge is enabled at all. The model judge is the primary
+   * analysis engine; heuristics always run and serve as the fallback when
+   * disabled or unconfigured. Defaults to true, but the judge stays inert
+   * until an API key is entered.
+   */
   enabled: boolean;
   /** OpenAI-compatible API base, e.g. "https://api.openai.com/v1". */
   baseUrl: string;
@@ -13,9 +18,9 @@ export interface MeterConfig {
 export const CONFIG_KEY = "aitmConfig";
 
 export const DEFAULT_CONFIG: MeterConfig = {
-  enabled: false,
+  enabled: true,
   baseUrl: "https://api.openai.com/v1",
-  model: "gpt-4o-mini",
+  model: "gpt-5.6-luna",
   apiKey: "",
   checkComments: true,
 };
@@ -28,7 +33,7 @@ function str(value: unknown, fallback: string): string {
 export function withDefaults(stored: unknown): MeterConfig {
   const partial = (typeof stored === "object" && stored !== null ? stored : {}) as Partial<MeterConfig>;
   return {
-    enabled: partial.enabled === true,
+    enabled: partial.enabled !== false,
     baseUrl: str(partial.baseUrl, DEFAULT_CONFIG.baseUrl).replace(/\/+$/, ""),
     model: str(partial.model, DEFAULT_CONFIG.model),
     apiKey: typeof partial.apiKey === "string" ? partial.apiKey.trim() : "",

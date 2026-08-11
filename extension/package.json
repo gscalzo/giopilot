@@ -1,7 +1,7 @@
 {
-  "name": "ai-tell-meter",
+  "name": "slop-radar",
   "version": "0.1.0",
-  "description": "Chrome extension that flags AI-typical writing patterns in the LinkedIn feed",
+  "description": "Chrome extension that flags AI-patterned writing in the LinkedIn feed",
   "private": true,
   "type": "module",
   "scripts": {

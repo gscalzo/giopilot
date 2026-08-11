@@ -34,6 +34,16 @@ describe("openReportModal", () => {
     expect(document.body.contains(host)).toBe(true);
   });
 
+  it("marks verdicts without a model result as pattern-only estimates", () => {
+    const shadow = openReportModal(document, vm()).shadowRoot!;
+    expect(shadow.querySelector(".meta")!.textContent).toContain("pattern-only estimate");
+  });
+
+  it("omits the pattern-only note when abstaining", () => {
+    const shadow = openReportModal(document, vm({ tier: null, abstain: "too-short" })).shadowRoot!;
+    expect(shadow.querySelector(".meta")!.textContent).not.toContain("pattern-only estimate");
+  });
+
   it("highlights each span with its label as a tooltip", () => {
     const shadow = openReportModal(document, vm()).shadowRoot!;
     const marks = [...shadow.querySelectorAll("mark")];

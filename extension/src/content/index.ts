@@ -40,7 +40,12 @@ function decorate(state: ItemState): void {
   if (isComment && state.verdict.abstain) return;
   decoratePost(
     state.item.element,
-    { tier: state.verdict.tier, partial: state.item.truncated, compact: isComment },
+    {
+      tier: state.verdict.tier,
+      partial: state.item.truncated,
+      compact: isComment,
+      basis: state.verdict.basis,
+    },
     () => {
       openReportModal(
         document,

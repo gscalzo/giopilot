@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>AI-Tell Meter — Options</title>
+    <title>Slop Radar — Options</title>
     <style>
       body { font: 14px/1.5 sans-serif; max-width: 560px; margin: 32px auto; color: #222; }
       label { display: block; margin: 14px 0 4px; font-weight: 600; }
@@ -14,23 +14,25 @@
     </style>
   </head>
   <body>
-    <h1>AI-Tell Meter</h1>
+    <h1>Slop Radar</h1>
     <p>
-      The pattern meter always runs locally. Optionally, a cloud model can second-guess it
-      via any OpenAI-compatible API.
+      Verdicts come from the model you configure below — deterministic patterns alone can't
+      catch everything. The local pattern engine pinpoints tells at exact offsets and stands
+      in (marked ≈) until a model is set up.
     </p>
     <label><input type="checkbox" id="checkComments" /> Also check comments</label>
     <p class="hint">Comments shorter than 20 words get no verdict.</p>
     <div class="privacy">
-      <strong>Privacy:</strong> with the cloud judge enabled, the text of posts in your feed is
-      sent to the API endpoint you configure below. Leave it disabled to keep everything on-device.
+      <strong>Privacy:</strong> with model analysis enabled, the text of posts in your feed is
+      sent to the API endpoint you configure below. Disable it to keep everything on-device
+      (pattern-only estimates).
     </div>
-    <label><input type="checkbox" id="enabled" /> Enable cloud judge</label>
+    <label><input type="checkbox" id="enabled" /> Enable model analysis</label>
     <label for="baseUrl">API base URL</label>
     <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1" />
     <p class="hint">Any OpenAI-compatible endpoint (OpenAI, OpenRouter, a local proxy…).</p>
     <label for="model">Model</label>
-    <input type="text" id="model" placeholder="gpt-4o-mini" />
+    <input type="text" id="model" placeholder="gpt-5.6-luna" />
     <label for="apiKey">API key</label>
     <input type="password" id="apiKey" autocomplete="off" />
     <p class="hint">Stored in extension storage on this machine. Anyone with access to this browser profile can read it.</p>

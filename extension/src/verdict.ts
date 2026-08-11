@@ -8,10 +8,9 @@ export interface Verdict {
   heuristic: HeuristicScore;
   judgeTier?: Tier;
   likelihood?: number;
+  /** "model" when the tier came from the LLM judge, "patterns" for the heuristic fallback. */
+  basis: "model" | "patterns";
 }
-
-const RANK: Record<Tier, number> = { green: 0, yellow: 1, red: 2 };
-const TIERS: Tier[] = ["green", "yellow", "red"];
 
 export function judgeTier(likelihood: number): Tier {
   if (likelihood >= 0.7) return "red";
@@ -19,15 +18,21 @@ export function judgeTier(likelihood: number): Tier {
   return "green";
 }
 
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
 /**
- * Heuristics and (optionally) the cloud judge each map to a tier; the final
- * tier is the rounded-up average, so the judge can bump the meter one step
- * either way but never silence an abstention. See ADR 0001.
+ * The LLM judge is the primary analysis engine: when it returns a result, its
+ * tier is the verdict outright. Heuristics run locally on every post and
+ * annotate the report with offset-level flags; they also stand in as the
+ * tier when no model is configured (or when the post abstains, which the
+ * judge is never allowed to override). See ADR 0001 and ADR 0005.
  */
 export function combine(heuristic: HeuristicScore, judge: JudgeResult | null): Verdict {
-  if (heuristic.abstain) return { tier: null, abstain: heuristic.abstain, heuristic };
-  if (!judge) return { tier: heuristic.tier, heuristic };
-  const fromJudge = judgeTier(judge.likelihood);
-  const tier = TIERS[Math.ceil((RANK[heuristic.tier] + RANK[fromJudge]) / 2)] as Tier;
-  return { tier, heuristic, judgeTier: fromJudge, likelihood: judge.likelihood };
+  if (heuristic.abstain) return { tier: null, abstain: heuristic.abstain, heuristic, basis: "patterns" };
+  if (!judge) return { tier: heuristic.tier, heuristic, basis: "patterns" };
+  const likelihood = clamp01(judge.likelihood);
+  const tier = judgeTier(likelihood);
+  return { tier, heuristic, judgeTier: tier, likelihood, basis: "model" };
 }

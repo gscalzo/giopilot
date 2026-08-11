@@ -78,10 +78,12 @@ Two routes if we want it:
 
 ## Temporary lodger: `extension/`
 
-The `extension/` folder is an unrelated Chrome extension (**AI-Tell Meter**, a LinkedIn
+The `extension/` folder is an unrelated Chrome extension (**Slop Radar**, a LinkedIn
 AI-writing-pattern flagger) prototyped here before moving to its own repository. It is a
 fully self-contained workspace — own package.json, lint, tests, docs — and the root
-toolchain ignores it entirely. See [extension/README.md](../extension/README.md) and
+toolchain ignores it, apart from two quality gates: `.github/workflows/extension.yml`
+and an extension check in the pre-commit hook when `extension/` files are staged. See
+[extension/README.md](../extension/README.md) and
 [extension/docs/adr/0003](../extension/docs/adr/0003-standalone-workspace.md).
 
 ## Out of scope (for now)

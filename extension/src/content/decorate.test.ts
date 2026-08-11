@@ -14,7 +14,8 @@ describe("decoratePost", () => {
     decoratePost(el, { tier: "red", partial: false }, () => {});
     expect(el.style.outline).toContain("#c62828");
     const badge = el.querySelector("button.aitm-badge")!;
-    expect(badge.textContent).toBe("AI tells: high");
+    // basis omitted behaves like "patterns" — no judge ran, so it's an estimate.
+    expect(badge.textContent).toBe("AI tells: high ≈");
     expect(el.dataset.aitmTier).toBe("red");
   });
 
@@ -23,7 +24,7 @@ describe("decoratePost", () => {
     decoratePost(el, { tier: "green", partial: false }, () => {});
     decoratePost(el, { tier: "yellow", partial: true }, () => {});
     expect(el.querySelectorAll(".aitm-badge")).toHaveLength(1);
-    expect(el.querySelector(".aitm-badge")!.textContent).toBe("AI tells: medium ◐");
+    expect(el.querySelector(".aitm-badge")!.textContent).toBe("AI tells: medium ≈ ◐");
   });
 
   it("shows a grey no-verdict badge without an outline when abstaining", () => {
@@ -66,10 +67,42 @@ describe("decoratePost", () => {
     expect(badge.style.fontSize).toBe("11px");
     expect(badge.style.padding).toBe("1px 10px");
   });
+
+  it("marks a pattern-only verdict with the ≈ suffix and the estimate tooltip", () => {
+    const el = card();
+    decoratePost(el, { tier: "yellow", partial: false, basis: "patterns" }, () => {});
+    const badge = el.querySelector<HTMLButtonElement>("button.aitm-badge")!;
+    expect(badge.textContent).toBe("AI tells: medium ≈");
+    expect(badge.title).toBe("Pattern-based estimate — configure a model in Options for full analysis");
+  });
+
+  it("gives a model verdict no suffix and the model tooltip", () => {
+    const el = card();
+    decoratePost(el, { tier: "yellow", partial: false, basis: "model" }, () => {});
+    const badge = el.querySelector<HTMLButtonElement>("button.aitm-badge")!;
+    expect(badge.textContent).toBe("AI tells: medium");
+    expect(badge.title).toBe("Verdict from model analysis");
+  });
+
+  it("treats an omitted basis like patterns, since no judge ran", () => {
+    const el = card();
+    decoratePost(el, { tier: "yellow", partial: false }, () => {});
+    const badge = el.querySelector<HTMLButtonElement>("button.aitm-badge")!;
+    expect(badge.textContent).toBe("AI tells: medium ≈");
+    expect(badge.title).toBe("Pattern-based estimate — configure a model in Options for full analysis");
+  });
 });
 
 describe("badgeLabel", () => {
   it("marks partial analyses", () => {
-    expect(badgeLabel({ tier: "green", partial: true })).toBe("AI tells: low ◐");
+    expect(badgeLabel({ tier: "green", partial: true })).toBe("AI tells: low ≈ ◐");
+  });
+
+  it("adds no ≈ suffix for a model-basis verdict", () => {
+    expect(badgeLabel({ tier: "green", partial: false, basis: "model" })).toBe("AI tells: low");
+  });
+
+  it("adds no ≈ suffix when there is no tier (abstention)", () => {
+    expect(badgeLabel({ tier: null, partial: false })).toBe("AI tells: n/a");
   });
 });

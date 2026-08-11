@@ -23,8 +23,18 @@ describe("withDefaults", () => {
     });
   });
 
+  it("round-trips an explicit enabled: false", () => {
+    const config = withDefaults({ enabled: false });
+    expect(config.enabled).toBe(false);
+  });
+
   it("drops junk values back to defaults", () => {
     const config = withDefaults({ enabled: "yes", baseUrl: 42, model: "", apiKey: null, checkComments: "yes" });
     expect(config).toEqual(DEFAULT_CONFIG);
+  });
+
+  it("falls back to enabled: true for a junk enabled value", () => {
+    const config = withDefaults({ enabled: "yes" });
+    expect(config.enabled).toBe(true);
   });
 });

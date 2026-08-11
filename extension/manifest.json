@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AI-Tell Meter",
+  "name": "Slop Radar",
   "version": "0.1.0",
-  "description": "Highlights AI-typical writing patterns in your LinkedIn feed. A density meter, not an authorship oracle.",
+  "description": "Flags AI-patterned writing in your LinkedIn feed, with model-backed analysis. A radar, not an authorship oracle.",
   "permissions": ["storage"],
   "optional_host_permissions": ["https://*/*"],
   "background": {

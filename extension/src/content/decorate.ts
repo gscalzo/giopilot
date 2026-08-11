@@ -4,6 +4,7 @@ export interface DecorationView {
   tier: Tier | null;
   partial: boolean;
   compact?: boolean;
+  basis?: "model" | "patterns";
 }
 
 const COLORS: Record<Tier, string> = {
@@ -20,9 +21,18 @@ const BADGE_TEXT: Record<Tier, string> = {
 
 const BADGE_CLASS = "aitm-badge";
 
+const MODEL_TITLE = "Verdict from model analysis";
+const ESTIMATE_TITLE = "Pattern-based estimate — configure a model in Options for full analysis";
+
 export function badgeLabel(view: DecorationView): string {
   const base = view.tier ? BADGE_TEXT[view.tier] : "AI tells: n/a";
-  return view.partial ? `${base} ◐` : base;
+  const approximated = view.tier !== null && view.basis !== "model";
+  const withApprox = approximated ? `${base} ≈` : base;
+  return view.partial ? `${withApprox} ◐` : withApprox;
+}
+
+function badgeTitle(view: DecorationView): string {
+  return view.basis === "model" ? MODEL_TITLE : ESTIMATE_TITLE;
 }
 
 function ensureBadge(el: HTMLElement, onOpen: () => void): HTMLButtonElement {
@@ -82,6 +92,7 @@ export function decoratePost(el: HTMLElement, view: DecorationView, onOpen: () =
   const badge = ensureBadge(el, onOpen);
   badge.style.background = view.tier ? COLORS[view.tier] : "#757575";
   badge.textContent = badgeLabel(view);
+  badge.title = badgeTitle(view);
   applyBadgeStyle(badge, view.compact);
   el.dataset.aitmTier = view.tier ?? "none";
 }

@@ -64,6 +64,7 @@ function headline(vm: ReportViewModel): string {
 function metaLine(vm: ReportViewModel): string {
   const parts = [`${vm.density} tell-weight per 100 words`, `${vm.words} words`];
   if (vm.likelihood !== undefined) parts.push(`model likelihood ${Math.round(vm.likelihood * 100)}%`);
+  else if (vm.tier) parts.push("pattern-only estimate — no model configured");
   if (vm.partial) parts.push("partial text — post was truncated");
   return parts.join(" · ");
 }
