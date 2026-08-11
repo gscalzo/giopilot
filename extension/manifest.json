@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "AI-Tell Meter",
+  "version": "0.1.0",
+  "description": "Highlights AI-typical writing patterns in your LinkedIn feed. A density meter, not an authorship oracle.",
+  "permissions": ["storage"],
+  "optional_host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/feed*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html"
+}
