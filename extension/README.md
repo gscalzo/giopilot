@@ -29,19 +29,23 @@ which returns a 0–1 likelihood plus verbatim quotes of the phrases it found
 suspicious. Those quotes are located back to exact offsets locally (LLMs can't be
 trusted with character positions).
 
-**The rubric is the real humanizer skill — vendored, and updatable in one click.**
-What the model is told to look for is the community-maintained
+**The rubric is the real humanizer skill — vendored, distilled, and updatable in
+one click.** The source of truth is the community-maintained
 [blader/humanizer](https://github.com/blader/humanizer) skill (MIT, based on
 Wikipedia's "Signs of AI writing" guide), vendored verbatim at
 [`skills/humanizer/SKILL.md`](./skills/humanizer/SKILL.md) with provenance in
-`UPSTREAM.json`. A code-owned judging preamble reframes it from a rewriting tool
-into a detection rubric. In Options you can: **Update skill from GitHub** (fetch
-the latest upstream version at runtime — no rebuild), edit the rubric freely, or
-*Reset to default*. Precedence: your edit > downloaded copy > bundled snapshot,
-and the JSON output contract is appended in code so no update or edit can break
-parsing ([ADR 0006](./docs/adr/0006-humanizer-skill-as-data.md),
-[ADR 0008](./docs/adr/0008-upstream-skill-sync.md)). The deterministic detectors
-below approximate the skill's core patterns in fast local regexes.
+`UPSTREAM.json`. But it's a ~30 KB *rewriting* skill, so the per-post judge
+doesn't read it directly: **Update skill from GitHub** in Options runs a
+two-stage pipeline — download the latest skill, then distill it with a stronger
+model (default `gpt-5.6-terra`, configurable) into a compact detection rubric of
+just the signals, false-positive rules, and the clusters principle. A reviewed
+distilled snapshot ([`skills/humanizer/DISTILLED.md`](./skills/humanizer/DISTILLED.md))
+ships in the repo for first-run and keyless installs. Precedence: your edit >
+runtime distillation > bundled snapshot; the judging preamble and JSON output
+contract are code-owned so no update or edit can break parsing
+([ADR 0008](./docs/adr/0008-upstream-skill-sync.md),
+[ADR 0009](./docs/adr/0009-distilled-rubric.md)). The deterministic detectors
+below approximate the same signals in fast local regexes.
 
 **The local pattern engine annotates and stands in.** Deterministic detectors always
 run, entirely on-device, pinpointing classic tells at exact offsets for the report.

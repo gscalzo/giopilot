@@ -24,6 +24,13 @@ export interface MeterConfig {
    * GitHub. Empty string means none downloaded yet (use the bundled snapshot).
    */
   downloadedSkill: string;
+  /**
+   * Compact detection rubric distilled from downloadedSkill via distillModel.
+   * Empty string means use bundled snapshot.
+   */
+  distilledSkill: string;
+  /** Stronger model used to distill the skill into a compact rubric. */
+  distillModel: string;
 }
 
 export const CONFIG_KEY = "aitmConfig";
@@ -36,6 +43,8 @@ export const DEFAULT_CONFIG: MeterConfig = {
   checkComments: true,
   skillText: "",
   downloadedSkill: "",
+  distilledSkill: "",
+  distillModel: "gpt-5.6-terra",
 };
 
 function str(value: unknown, fallback: string): string {
@@ -57,6 +66,8 @@ export function withDefaults(stored: unknown): MeterConfig {
     checkComments: partial.checkComments !== false,
     skillText: optionalStr(partial.skillText),
     downloadedSkill: optionalStr(partial.downloadedSkill),
+    distilledSkill: optionalStr(partial.distilledSkill),
+    distillModel: str(partial.distillModel, DEFAULT_CONFIG.distillModel),
   };
 }
 

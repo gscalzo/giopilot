@@ -15,6 +15,8 @@ describe("withDefaults", () => {
       checkComments: false,
       skillText: "My own rubric.",
       downloadedSkill: "# fresh upstream",
+      distilledSkill: "# compact rubric",
+      distillModel: " gpt-5.6-sol ",
     });
     expect(config).toEqual({
       enabled: true,
@@ -24,6 +26,8 @@ describe("withDefaults", () => {
       checkComments: false,
       skillText: "My own rubric.",
       downloadedSkill: "# fresh upstream",
+      distilledSkill: "# compact rubric",
+      distillModel: "gpt-5.6-sol",
     });
   });
 
@@ -41,6 +45,8 @@ describe("withDefaults", () => {
       checkComments: "yes",
       skillText: 42,
       downloadedSkill: null,
+      distilledSkill: 7,
+      distillModel: "",
     });
     expect(config).toEqual(DEFAULT_CONFIG);
   });

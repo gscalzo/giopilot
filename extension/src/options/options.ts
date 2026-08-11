@@ -2,6 +2,7 @@
 import { CONFIG_KEY, loadConfig, withDefaults, type MeterConfig } from "../config";
 import { defaultRubric } from "../judge/prompt";
 import { fetchLatestSkill, SkillUpdateError } from "../skillUpdate";
+import { distillSkill, SkillDistillError } from "../skillDistill";
 
 function field(id: string): HTMLInputElement {
   return document.getElementById(id) as HTMLInputElement;
@@ -20,9 +21,10 @@ function statusEl(): HTMLElement | null {
 }
 
 let downloadedSkill = "";
+let distilledSkill = "";
 
 function skillOverride(value: string): string {
-  return value.trim() === defaultRubric(downloadedSkill).trim() ? "" : value;
+  return value.trim() === defaultRubric(distilledSkill).trim() ? "" : value;
 }
 
 function readForm(): MeterConfig {
@@ -34,6 +36,8 @@ function readForm(): MeterConfig {
     checkComments: field("checkComments").checked,
     skillText: skillOverride(textArea("skillText").value),
     downloadedSkill,
+    distilledSkill,
+    distillModel: field("distillModel").value,
   });
 }
 
@@ -70,42 +74,89 @@ async function requestGitHubOrigin(): Promise<boolean> {
   }
 }
 
-async function updateSkillFromGitHub(): Promise<void> {
+async function requestPermissions(): Promise<boolean> {
+  const cfg = readForm();
   if (!(await requestGitHubOrigin())) {
     setStatus("GitHub access not granted — cannot update the skill.");
+    return false;
+  }
+  if (!(await requestOrigin(cfg.baseUrl))) {
+    setStatus("API host permission was not granted — cannot distill the skill.");
+    return false;
+  }
+  return true;
+}
+
+async function downloadSkill(): Promise<string> {
+  setStatus("Downloading skill…");
+  return await fetchLatestSkill();
+}
+
+async function distillDownloadedSkill(raw: string): Promise<string> {
+  const cfg = readForm();
+  setStatus(`Distilling with ${cfg.distillModel}…`);
+  return await distillSkill(raw, {
+    baseUrl: cfg.baseUrl,
+    apiKey: cfg.apiKey,
+    distillModel: cfg.distillModel,
+  });
+}
+
+function handleUpdateError(err: unknown): void {
+  if (err instanceof SkillUpdateError) {
+    setStatus(`Update failed: ${err.message}`);
+  } else if (err instanceof SkillDistillError) {
+    setStatus(`Update failed: ${err.message}`);
+  } else {
+    setStatus("Update failed: unknown error");
+  }
+}
+
+async function updateSkillFromGitHub(): Promise<void> {
+  const cfg = readForm();
+  if (cfg.apiKey === "") {
+    setStatus("Set an API key first — updating distills the skill with a model.");
     return;
   }
 
-  const previousDefault = defaultRubric(downloadedSkill);
+  if (!(await requestPermissions())) {
+    return;
+  }
+
+  const previousDefault = defaultRubric(distilledSkill);
   try {
-    const newSkill = await fetchLatestSkill();
-    downloadedSkill = newSkill;
+    const raw = await downloadSkill();
+    const distilled = await distillDownloadedSkill(raw);
+
+    downloadedSkill = raw;
+    distilledSkill = distilled;
     await chrome.storage.local.set({ [CONFIG_KEY]: readForm() });
 
     const textAreaVal = textArea("skillText").value.trim();
     if (textAreaVal === previousDefault.trim()) {
-      textArea("skillText").value = defaultRubric(downloadedSkill);
+      textArea("skillText").value = defaultRubric(distilledSkill);
     }
 
-    setStatus("Skill updated from GitHub ✓");
+    setStatus("Skill updated & distilled ✓");
   } catch (err) {
-    const msg = err instanceof SkillUpdateError ? err.message : "Unknown error";
-    setStatus(`Update failed: ${msg}`);
+    handleUpdateError(err);
   }
 }
 
 async function init(): Promise<void> {
   const config = await loadConfig();
   downloadedSkill = config.downloadedSkill || "";
+  distilledSkill = config.distilledSkill || "";
   field("enabled").checked = config.enabled;
   field("baseUrl").value = config.baseUrl;
   field("model").value = config.model;
   field("apiKey").value = config.apiKey;
   field("checkComments").checked = config.checkComments;
-  textArea("skillText").value = config.skillText || defaultRubric(downloadedSkill);
+  field("distillModel").value = config.distillModel;
+  textArea("skillText").value = config.skillText || defaultRubric(distilledSkill);
   button("save").addEventListener("click", () => void save());
   button("resetSkill").addEventListener("click", () => {
-    textArea("skillText").value = defaultRubric(downloadedSkill);
+    textArea("skillText").value = defaultRubric(distilledSkill);
   });
   button("updateSkill").addEventListener("click", () => void updateSkillFromGitHub());
 }

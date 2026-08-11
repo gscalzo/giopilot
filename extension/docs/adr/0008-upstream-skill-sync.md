@@ -4,6 +4,9 @@
 
 Accepted. Amends [ADR 0006](./0006-humanizer-skill-as-data.md): the skill file is
 no longer hand-written; it is the shared upstream skill, vendored and syncable.
+Amended by [ADR 0009](./0009-distilled-rubric.md): the downloaded skill is now
+distilled into a compact detection rubric before use — the judge no longer reads
+the full skill verbatim.
 
 ## Context
 
