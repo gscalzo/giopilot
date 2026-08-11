@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from "vitest";
-import { badgeLabel, decoratePost } from "./decorate";
+import { badgeLabel, clearDecoration, decoratePost } from "./decorate";
 
 function card(): HTMLElement {
   const el = document.createElement("div");
@@ -40,6 +40,17 @@ describe("decoratePost", () => {
     decoratePost(el, { tier: "green", partial: false }, onOpen);
     (el.querySelector(".aitm-badge") as HTMLButtonElement).click();
     expect(onOpen).toHaveBeenCalledOnce();
+  });
+
+  it("rebinds the click handler on re-decoration so the latest onOpen wins", () => {
+    const el = card();
+    const first = vi.fn();
+    const second = vi.fn();
+    decoratePost(el, { tier: "green", partial: false }, first);
+    decoratePost(el, { tier: "green", partial: false }, second);
+    (el.querySelector(".aitm-badge") as HTMLButtonElement).click();
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledOnce();
   });
 
   it("produces a 2px outline and compact badge styles in compact mode", () => {
@@ -90,6 +101,22 @@ describe("decoratePost", () => {
     const badge = el.querySelector<HTMLButtonElement>("button.aitm-badge")!;
     expect(badge.textContent).toBe("AI tells: medium ≈");
     expect(badge.title).toBe("Pattern-based estimate — configure a model in Options for full analysis");
+  });
+});
+
+describe("clearDecoration", () => {
+  it("removes the badge, outline and tier marker", () => {
+    const el = card();
+    decoratePost(el, { tier: "red", partial: false }, () => {});
+    clearDecoration(el);
+    expect(el.querySelector(".aitm-badge")).toBeNull();
+    expect(el.style.outline).toBe("");
+    expect(el.dataset.aitmTier).toBeUndefined();
+  });
+
+  it("is a no-op on an undecorated card", () => {
+    const el = card();
+    expect(() => clearDecoration(el)).not.toThrow();
   });
 });
 

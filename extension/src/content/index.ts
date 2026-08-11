@@ -13,7 +13,7 @@ import type { Flag } from "../core/types";
 import type { JudgeResult } from "../judge/types";
 import type { JudgeRequestMessage, JudgeResponseMessage } from "../messages";
 import { combine, type Verdict } from "../verdict";
-import { decoratePost } from "./decorate";
+import { clearDecoration, decoratePost } from "./decorate";
 import { openReportModal } from "./modal";
 import { buildReport } from "./report";
 
@@ -37,7 +37,11 @@ const elementIds = new WeakMap<Element, string>();
 function decorate(state: ItemState): void {
   const isComment = state.item.kind === "comment";
   // Abstaining comments stay unmarked — no badge clutter on "Congrats!" replies.
-  if (isComment && state.verdict.abstain) return;
+  // Clear any earlier decoration in case a previous verdict marked this element.
+  if (isComment && state.verdict.abstain) {
+    clearDecoration(state.item.element);
+    return;
+  }
   decoratePost(
     state.item.element,
     {
@@ -105,7 +109,20 @@ function process(item: FeedItem): void {
   viewport.observe(item.element);
 }
 
+// LinkedIn virtualises the feed: cards scroll away and are removed from the
+// DOM. Drop their states so the map does not retain detached elements forever
+// (judge verdicts stay memoised by text hash in the background worker).
+function pruneDisconnected(): void {
+  for (const [id, state] of states) {
+    if (!state.item.element.isConnected) {
+      viewport.unobserve(state.item.element);
+      states.delete(id);
+    }
+  }
+}
+
 function scan(): void {
+  pruneDisconnected();
   for (const item of linkedInAdapter.findItems(document)) {
     if (item.kind === "comment" && !checkComments) continue;
     process(item);

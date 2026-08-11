@@ -15,6 +15,9 @@ const TEXT_SELECTORS = [
 const COMMENT_TEXT_SELECTORS = [".comments-comment-item__main-content", ".update-components-text"];
 
 const SEE_MORE_CLASS = ".feed-shared-inline-show-more-text__see-more-less-toggle";
+// Anchored: the clamp toggle reads exactly "…see more". A substring match would
+// also hit unrelated buttons like "See more comments" and flag full posts as clamped.
+const SEE_MORE_TEXT = /^…?\s*see more$/i;
 
 function firstMatch(scope: Element, selectors: string[]): Element | null {
   for (const selector of selectors) {
@@ -46,7 +49,9 @@ function normalizeText(raw: string): string {
 function isTruncated(scope: Element, isOwn: (el: Element) => boolean): boolean {
   const seeMore = [...scope.querySelectorAll(SEE_MORE_CLASS)].find(isOwn);
   if (seeMore) return true;
-  return [...scope.querySelectorAll("button")].some((b) => isOwn(b) && /see more/i.test(b.textContent ?? ""));
+  return [...scope.querySelectorAll("button")].some(
+    (b) => isOwn(b) && SEE_MORE_TEXT.test((b.textContent ?? "").trim()),
+  );
 }
 
 // A see-more toggle inside a nested comment belongs to that comment, not the post.

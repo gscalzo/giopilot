@@ -1,4 +1,5 @@
 import type { MeterConfig } from "../config";
+import { clamp01 } from "../core/clamp";
 import type { Judge, JudgePhrase, JudgeResult } from "./types";
 
 export class JudgeRequestError extends Error {}
@@ -37,10 +38,6 @@ function extractContent(data: ChatCompletionResponse): string {
   return content;
 }
 
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
-
 function parsePhrases(value: unknown): JudgePhrase[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -65,7 +62,7 @@ function parseLikelihood(value: unknown): number {
 }
 
 export function parseJudgeResult(content: string): JudgeResult {
-  const stripped = content.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  const stripped = content.trim().replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   let raw: unknown;
   try {
     raw = JSON.parse(stripped);

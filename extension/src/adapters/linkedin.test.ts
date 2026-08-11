@@ -46,6 +46,16 @@ describe("linkedInAdapter", () => {
     expect(linkedInAdapter.findItems(root)[0]!.truncated).toBe(true);
   });
 
+  it("does not mark a post truncated because of an unrelated see-more-ish button", () => {
+    const root = feed(`
+      <div data-id="urn:li:activity:445">
+        <span class="update-components-text">Full text, no clamp.</span>
+        <button>See more comments</button>
+      </div>
+    `);
+    expect(linkedInAdapter.findItems(root)[0]!.truncated).toBe(false);
+  });
+
   it("skips posts without extractable text and dedupes repeated URNs", () => {
     const root = feed(`
       <div data-id="urn:li:activity:555"><img alt="just media"></div>

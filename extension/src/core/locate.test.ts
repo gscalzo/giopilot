@@ -12,6 +12,12 @@ describe("locateQuote", () => {
     expect(locateQuote(text, "it's a marathon")).toEqual({ start: 22, end: 37 });
   });
 
+  it("returns null instead of misaligned offsets when lowercasing changes lengths", () => {
+    // "İ" lowercases to two code units, which would shift every later offset.
+    const tricky = "İstanbul thoughts. It's a Marathon.";
+    expect(locateQuote(tricky, "it's a marathon")).toBeNull();
+  });
+
   it("returns null when the quote is absent", () => {
     expect(locateQuote(text, "sprint")).toBeNull();
   });

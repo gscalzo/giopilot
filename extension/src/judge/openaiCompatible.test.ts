@@ -57,6 +57,11 @@ describe("parseJudgeResult", () => {
     expect(result.likelihood).toBe(0.5);
   });
 
+  it("strips fences surrounded by whitespace", () => {
+    const result = parseJudgeResult('\n```json\n{"likelihood": 0.5, "phrases": []}\n```\n');
+    expect(result.likelihood).toBe(0.5);
+  });
+
   it("clamps likelihood into 0..1", () => {
     expect(parseJudgeResult('{"likelihood": 7, "phrases": []}').likelihood).toBe(1);
     expect(parseJudgeResult('{"likelihood": -2, "phrases": []}').likelihood).toBe(0);

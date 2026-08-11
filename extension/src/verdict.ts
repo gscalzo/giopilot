@@ -1,3 +1,4 @@
+import { clamp01 } from "./core/clamp";
 import type { AbstainReason, HeuristicScore, Tier } from "./core/types";
 import type { JudgeResult } from "./judge/types";
 
@@ -16,10 +17,6 @@ export function judgeTier(likelihood: number): Tier {
   if (likelihood >= 0.7) return "red";
   if (likelihood >= 0.35) return "yellow";
   return "green";
-}
-
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
 }
 
 /**

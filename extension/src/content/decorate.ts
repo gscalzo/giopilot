@@ -35,7 +35,7 @@ function badgeTitle(view: DecorationView): string {
   return view.basis === "model" ? MODEL_TITLE : ESTIMATE_TITLE;
 }
 
-function ensureBadge(el: HTMLElement, onOpen: () => void): HTMLButtonElement {
+function ensureBadge(el: HTMLElement): HTMLButtonElement {
   const existing = el.querySelector<HTMLButtonElement>(`.${BADGE_CLASS}`);
   if (existing) return existing;
   const badge = el.ownerDocument.createElement("button");
@@ -43,10 +43,6 @@ function ensureBadge(el: HTMLElement, onOpen: () => void): HTMLButtonElement {
   badge.style.cssText =
     "position:absolute;z-index:10;font:600 11px/1.6 sans-serif;" +
     "border-radius:12px;border:none;color:#fff;cursor:pointer;";
-  badge.addEventListener("click", (event) => {
-    event.stopPropagation();
-    onOpen();
-  });
   el.appendChild(badge);
   return badge;
 }
@@ -82,6 +78,13 @@ function ensurePositioned(el: HTMLElement): void {
   if (position === "" || position === "static") el.style.position = "relative";
 }
 
+/** Remove any decoration previously applied to a card (badge, outline, tier marker). */
+export function clearDecoration(el: HTMLElement): void {
+  el.querySelector(`.${BADGE_CLASS}`)?.remove();
+  applyOutline(el, null);
+  delete el.dataset.aitmTier;
+}
+
 /**
  * Border + badge for one post card. Idempotent: LinkedIn re-renders wipe
  * inline styles, so callers re-invoke this freely on every scan.
@@ -89,7 +92,14 @@ function ensurePositioned(el: HTMLElement): void {
 export function decoratePost(el: HTMLElement, view: DecorationView, onOpen: () => void): void {
   ensurePositioned(el);
   applyOutline(el, view.tier, view.compact);
-  const badge = ensureBadge(el, onOpen);
+  const badge = ensureBadge(el);
+  // Rebind on every call: the caller's state may have been rebuilt (e.g. after
+  // a "…see more" expansion), and a listener bound only at creation would keep
+  // opening a report for the old text.
+  badge.onclick = (event): void => {
+    event.stopPropagation();
+    onOpen();
+  };
   badge.style.background = view.tier ? COLORS[view.tier] : "#757575";
   badge.textContent = badgeLabel(view);
   badge.title = badgeTitle(view);
