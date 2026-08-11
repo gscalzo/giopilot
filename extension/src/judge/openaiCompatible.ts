@@ -1,5 +1,6 @@
 import type { MeterConfig } from "../config";
 import { clamp01 } from "../core/clamp";
+import { supportsJsonMode } from "../providers";
 import { buildSystemPrompt } from "./prompt";
 import type { Judge, JudgePhrase, JudgeResult } from "./types";
 
@@ -13,7 +14,7 @@ function requestBody(config: MeterConfig, text: string): unknown {
   return {
     model: config.model,
     temperature: 0,
-    response_format: { type: "json_object" },
+    ...(supportsJsonMode(config.baseUrl) ? { response_format: { type: "json_object" } } : {}),
     messages: [
       { role: "system", content: buildSystemPrompt(config) },
       { role: "user", content: text },
