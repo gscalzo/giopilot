@@ -1,5 +1,1 @@
 npm run check
-
-if git diff --cached --name-only | grep -q '^extension/'; then
-  (cd extension && npm run check)
-fi
