@@ -3,8 +3,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    // extension/ is a self-contained workspace with its own toolchain (see extension/docs/adr/0003).
-    ignores: ["dist/**", "coverage/**", "node_modules/**", ".giopilot/**", "extension/**"],
+    ignores: ["dist/**", "coverage/**", "node_modules/**", ".giopilot/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
