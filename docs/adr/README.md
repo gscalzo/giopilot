@@ -14,3 +14,4 @@ Short records of the decisions that shaped giopilot, in the
 | [0005](./0005-permission-gating.md) | Composed permission policy + extension gates | Accepted |
 | [0006](./0006-complexity-gate.md) | Enforce cyclomatic complexity ≤ 5 | Accepted |
 | [0007](./0007-credits-endpoint.md) | Copilot credits via the `copilot_internal` endpoint | Accepted |
+| [0008](./0008-shell-passthrough-not-in-context.md) | `!` shell pass-through is display-only, not in the agent's context | Accepted |

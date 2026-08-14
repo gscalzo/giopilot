@@ -58,6 +58,35 @@ describe("App", () => {
     unmount();
   });
 
+  it("enters shell mode on !, showing a ! glyph and the command without the bang", async () => {
+    const controller = new SessionController();
+    controller.attach(fakeHarness());
+    const { lastFrame, stdin, unmount } = render(<App controller={controller} />);
+    await flush();
+    expect(lastFrame()).toContain("›"); // normal prompt glyph at idle
+    stdin.write("!ls -la");
+    await flush();
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("! ls -la"); // ! glyph + command, no doubled bang
+    expect(frame).not.toContain("!!");
+    expect(frame).not.toContain("›");
+    unmount();
+  });
+
+  it("leaves shell mode when the command is erased back to empty", async () => {
+    const controller = new SessionController();
+    controller.attach(fakeHarness());
+    const { lastFrame, stdin, unmount } = render(<App controller={controller} />);
+    await flush();
+    stdin.write("!a");
+    await flush();
+    expect(lastFrame()).not.toContain("›");
+    stdin.write(""); // backspace removes the "a", leaving shell mode
+    await flush();
+    expect(lastFrame()).toContain("›");
+    unmount();
+  });
+
   it("Tab completes to the longest common prefix", async () => {
     const controller = new SessionController();
     controller.attach(fakeHarness());

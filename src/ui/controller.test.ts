@@ -57,6 +57,24 @@ describe("SessionController", () => {
     expect(c.state.lines).toEqual([]);
   });
 
+  it("runs a !command in a subshell, shows its output, and never sends it to the agent", async () => {
+    const { c, harness } = attached();
+    await c.submit("!echo hi");
+    expect(harness.sendTurn).not.toHaveBeenCalled();
+    expect(c.state.lines.some((l) => l.text === "! echo hi")).toBe(true);
+    expect(c.state.lines.some((l) => l.text.includes("hi"))).toBe(true);
+    // It must never become part of the conversation the model sees.
+    expect(c.state.lines.some((l) => l.role === "user")).toBe(false);
+    expect(c.state.status).toBe("idle");
+  });
+
+  it("ignores a bare ! with no command", async () => {
+    const { c, harness } = attached();
+    await c.submit("!   ");
+    expect(harness.sendTurn).not.toHaveBeenCalled();
+    expect(c.state.lines).toEqual([]);
+  });
+
   it("merges consecutive assistant deltas into one line", () => {
     const { c } = attached();
     const hooks = c.renderHooks();

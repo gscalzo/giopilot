@@ -33,6 +33,23 @@ Assistant text streams in; tool calls appear as dim `[tool: …]` notices. The i
 between two full-width rules; the prompt shows a `›` chevron when idle and an animated
 spinner while the model is working.
 
+### Shell commands (`!`)
+
+Start a line with `!` to run the rest in a subshell — handy for a quick `git status` or
+`ls` without leaving the session. The leading `!` becomes a yellow `!` prompt glyph and the
+field turns yellow, so it's clear you're in shell mode (erasing the command leaves it).
+
+```text
+─────────────────────────────────────────────
+! git status
+─────────────────────────────────────────────
+```
+
+The command's stdout/stderr (and a `[exit N]` note on failure) is printed to the
+transcript. It is **display-only**: shell output never enters the agent's context, so the
+model doesn't see the command or its result. See
+[ADR 0008](./adr/0008-shell-passthrough-not-in-context.md).
+
 ## The status line
 
 A single status line sits just below the input:

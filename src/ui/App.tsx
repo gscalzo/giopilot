@@ -53,6 +53,57 @@ function Line({ line }: { line: TranscriptLine }): React.JSX.Element {
   );
 }
 
+const INPUT_PLACEHOLDER = "type a prompt, /help, or !cmd to run a shell command";
+
+interface PromptProps {
+  input: string;
+  setInput: (value: string) => void;
+  submit: (value: string) => void;
+  glyph: string;
+  thinking: boolean;
+}
+
+/** Shell mode: the leading "!" becomes a yellow glyph and the field shows just the command. */
+function ShellPrompt({ input, setInput, submit }: PromptProps): React.JSX.Element {
+  const command = input.slice(1);
+  const onChange = (value: string) => setInput(value.length > 0 ? `!${value}` : value);
+  return (
+    <Box>
+      <Text color="yellow" bold>
+        {"! "}
+      </Text>
+      <Text color="yellow">
+        <TextInput
+          value={command}
+          onChange={onChange}
+          onSubmit={() => submit(input)}
+          placeholder={INPUT_PLACEHOLDER}
+        />
+      </Text>
+    </Box>
+  );
+}
+
+/** Normal prompt: chevron (or spinner while thinking) and a plain field. */
+function ChatPrompt({ input, setInput, submit, glyph, thinking }: PromptProps): React.JSX.Element {
+  return (
+    <Box>
+      <Text color={thinking ? "yellow" : "green"}>{glyph} </Text>
+      <TextInput
+        value={input}
+        onChange={setInput}
+        onSubmit={() => submit(input)}
+        placeholder={INPUT_PLACEHOLDER}
+      />
+    </Box>
+  );
+}
+
+/** Pick the prompt flavour: a `!`-prefixed line runs a shell command. */
+function Prompt(props: PromptProps): React.JSX.Element {
+  return props.input.startsWith("!") ? <ShellPrompt {...props} /> : <ChatPrompt {...props} />;
+}
+
 export function App({ controller }: { controller: SessionController }): React.JSX.Element {
   const { exit } = useApp();
   const [, forceRender] = useState(0);
@@ -103,15 +154,13 @@ export function App({ controller }: { controller: SessionController }): React.JS
           />
         ) : (
           <Box flexDirection="column">
-            <Box>
-              <Text color={thinking ? "yellow" : "green"}>{glyph} </Text>
-              <TextInput
-                value={input}
-                onChange={setInput}
-                onSubmit={onSubmit}
-                placeholder="type a prompt, or /help"
-              />
-            </Box>
+            <Prompt
+              input={input}
+              setInput={setInput}
+              submit={onSubmit}
+              glyph={glyph}
+              thinking={thinking}
+            />
             <Suggestions matches={matches} />
           </Box>
         )}

@@ -54,7 +54,7 @@ flowchart TD
 | **Assembly** | `systemPrompt.ts`, `manifest.ts`, `frontmatter.ts` | Build the minimal prompt and manifests. |
 | **Capabilities** | `skills/*`, `memory/*`, `extensions/*` | Lazy skills, durable memory, in-process extensions. |
 | **Session** | `harness.ts`, `permissions.ts` | Open and re-open the Copilot session; compose permissions; wire events. |
-| **Interaction** | `repl.ts`, `complete.ts`, `models.ts` | Slash-command dispatch, autocomplete, model selection. |
+| **Interaction** | `repl.ts`, `complete.ts`, `models.ts`, `shell.ts` | Slash-command dispatch, autocomplete, model selection, `!` shell pass-through. |
 | **UI** | `ui/controller.ts`, `ui/App.tsx`, `statusline.ts` | Framework-free state + a thin Ink view. |
 | **Ops** | `version.ts`, `git.ts`, `credits.ts` | Self-update, branch, Copilot credits. |
 

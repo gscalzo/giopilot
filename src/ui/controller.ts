@@ -1,6 +1,7 @@
 import type { Harness } from "../harness.js";
 import { handleInput, BUILTIN_NAMES, type ReplIO, type ReplResult } from "../repl.js";
 import { toModelChoices, type ModelChoice } from "../models.js";
+import { runShell } from "../shell.js";
 
 export type Status = "idle" | "thinking";
 export type LineRole = "user" | "assistant" | "tool" | "system";
@@ -118,10 +119,20 @@ export class SessionController {
   async submit(input: string): Promise<void> {
     const trimmed = input.trim();
     if (trimmed.length === 0 || !this.harness) return;
+    if (trimmed.startsWith("!")) return this.runShellCommand(trimmed.slice(1));
     if (!trimmed.startsWith("/")) this.addLine("user", trimmed);
 
     this.update({ status: "thinking" });
     await this.applyResult(await handleInput(trimmed, this.harness, this.io));
+  }
+
+  /** Run a `!`-prefixed shell command. Output is shown but never enters the agent's context. */
+  private async runShellCommand(command: string): Promise<void> {
+    const cmd = command.trim();
+    if (cmd.length === 0) return;
+    this.addLine("system", `! ${cmd}`);
+    const output = await runShell(cmd);
+    if (output.length > 0) this.addLine("system", output);
   }
 
   async openModelPicker(): Promise<void> {
