@@ -54,37 +54,6 @@ describe("createOpenAiCompatibleJudge", () => {
     expect(body.messages[0].content).toContain('"likelihood"');
   });
 
-  it("includes response_format json_object for the OpenAI base URL", async () => {
-    const fetchFn = vi.fn(async () => chatResponse('{"likelihood": 0.1, "phrases": []}'));
-    const judge = createOpenAiCompatibleJudge(
-      withDefaults({ ...CONFIG, baseUrl: "https://api.openai.com/v1" }),
-      fetchFn as any,
-    );
-    await judge.judge("text");
-    const body = JSON.parse((fetchFn.mock.calls[0] as any)[1].body);
-    expect(body.response_format).toEqual({ type: "json_object" });
-  });
-
-  it("omits response_format for the Hetzner base URL, keeping everything else identical", async () => {
-    const fetchFn = vi.fn(async () => chatResponse('{"likelihood": 0.1, "phrases": []}'));
-    const hetznerConfig = withDefaults({
-      ...CONFIG,
-      baseUrl: "https://inference.hetzner.com/api/v1",
-      model: "Qwen/Qwen3.6-35B-A3B-FP8",
-    });
-    const judge = createOpenAiCompatibleJudge(hetznerConfig, fetchFn as any);
-    await judge.judge("Let us delve into this.");
-
-    const [url, init] = fetchFn.mock.calls[0] as any;
-    expect(url).toBe("https://inference.hetzner.com/api/v1/chat/completions");
-    expect(init.headers.authorization).toBe("Bearer sk-test");
-    const body = JSON.parse(init.body);
-    expect(body).not.toHaveProperty("response_format");
-    expect(body.model).toBe("Qwen/Qwen3.6-35B-A3B-FP8");
-    expect(body.messages[1].content).toBe("Let us delve into this.");
-    expect(body.messages[0].content).toMatch(/em dash/i);
-  });
-
   it("throws JudgeRequestError on HTTP failure", async () => {
     const fetchFn = vi.fn(async () => new Response("nope", { status: 401 }));
     const judge = createOpenAiCompatibleJudge(CONFIG, fetchFn as any);

@@ -84,22 +84,8 @@ only there.
 
 Extension → *Options*:
 
-- **Provider** — pick a preset to fill the fields, or *Custom…* for any other
-  OpenAI-compatible endpoint:
-
-  | Provider | Endpoint | Notes |
-  | --- | --- | --- |
-  | OpenAI (default) | `https://api.openai.com/v1` | pay-as-you-go; model tiers below |
-  | Hetzner Inference | `https://inference.hetzner.com/api/v1` | EU-hosted **experiment** — no billing, no SLA, single model (`Qwen/Qwen3.6-35B-A3B-FP8`), token from [experiments.hetzner.com](https://experiments.hetzner.com) |
-
-  The Hetzner option is entirely optional and adds no dependency: it is one row in
-  a preset table plus a JSON-mode compatibility guard
-  ([ADR 0010](./docs/adr/0010-provider-presets-hetzner.md)). Because that
-  experiment exposes a single model, it serves both judging and skill
-  distillation.
-
-- **API base URL** — filled by the preset, or type your own. Chrome asks to grant
-  access to that origin (and only that origin) on save.
+- **API base URL** — e.g. `https://api.openai.com/v1`, an OpenRouter URL, or a local
+  proxy. Chrome asks to grant access to that origin (and only that origin) on save.
 - **Model** — default **`gpt-5.6-luna`**, OpenAI's fast/affordable tier built for
   high-volume classification. Alternatives (API prices per 1M tokens, August 2026):
 
